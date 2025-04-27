@@ -1,0 +1,54 @@
+name: Database Deployment
+
+on:
+  workflow_dispatch:
+
+env:
+  SERVER_SSH_KEY: ${{ secrets.SERVER_SSH_KEY }}
+  SERVER_USER: ${{ secrets.SERVER_USER }}
+  SERVER_IP: ${{ secrets.SERVER_IP }}
+  DOCKER_NETWORK_NAME: "rp-network"
+  DB_DATA_VOLUME_NAME: "db_data"
+  DB_CONTAINER_NAME: "rp_postgres"
+  POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
+  POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+  POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
+  POSTGRES_PORT: "5432"
+  DATABASE_DOCKER_IMAGE: ${{ vars.DATABASE_DOCKER_IMAGE }}
+
+jobs:
+  database-deployment:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Prepare SSH
+        run: |
+          mkdir -p ~/.ssh
+          touch ~/.ssh/known_hosts || true
+          ssh-keyscan -H ${{ env.SERVER_IP }} >> ~/.ssh/known_hosts
+      - name: Deploy database
+        run: |
+          ssh-agent bash -c "ssh-add <(echo '${{ env.SERVER_SSH_KEY }}') && \
+          ssh ${{ env.SERVER_USER }}@${{ env.SERVER_IP }} << 'EOF'
+            docker network create ${{ env.DOCKER_NETWORK_NAME }} || true
+            docker volume create --name ${{ env.DB_DATA_VOLUME_NAME }} || true
+            docker stop ${{ env.DB_CONTAINER_NAME }} || true
+            docker rm ${{ env.DB_CONTAINER_NAME }} || true
+            docker run -d \
+              --name ${{ env.DB_CONTAINER_NAME }} \
+              -e POSTGRES_DB=${{ env.POSTGRES_DB }} \
+              -e POSTGRES_PASSWORD=${{ env.POSTGRES_PASSWORD }} \
+              -e POSTGRES_USER=${{ env.POSTGRES_USER }} \
+              --network ${{ env.DOCKER_NETWORK_NAME }} \
+              --restart always \
+              --log-opt max-size=10m \
+              --log-opt max-file=3 \
+              -p ${{ env.POSTGRES_PORT }}:${{ env.POSTGRES_PORT }} \
+              -v ${{ env.DB_DATA_VOLUME_NAME }}:/var/lib/postgresql/data \
+              --label logging='promtail' \
+              --label logging_jobname='containerlogs' \
+              --health-cmd 'pg_isready -U ${{ env.POSTGRES_USER }} -h localhost -d ${{ env.POSTGRES_DB }}' \
+              --health-interval 30s \
+              --health-timeout 10s \
+              --health-retries 5 \
+              ${{ env.DATABASE_DOCKER_IMAGE }}
+          EOF"

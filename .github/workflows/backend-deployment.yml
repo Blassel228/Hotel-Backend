@@ -1,0 +1,85 @@
+name: Backend Deployment
+
+on:
+  push:
+    branches:
+      - main # Trigger on pushes to the main branch
+  workflow_dispatch: # Allow manual triggering
+
+env:
+  SERVER_HOST: ${{ secrets.SERVER_HOST }}
+  SERVER_PORT: ${{ secrets.SERVER_PORT }}
+  DB_USER: ${{ secrets.DB_USER }}
+  DB_PASS: ${{ secrets.DB_PASS }}
+  DB_HOST: ${{ secrets.DB_HOST }}
+  DB_PORT: ${{ secrets.DB_PORT }}
+  DB_NAME: ${{ secrets.DB_NAME }}
+  DB_DATA_VOLUME_NAME: ${{ secrets.DB_DATA_VOLUME_NAME }}
+  EXPORT_DATA_VOLUME_NAME: ${{ secrets.EXPORT_DATA_VOLUME_NAME }}
+  FRONTEND_URL: ${{ secrets.FRONTEND_URL }}
+  SERVER_CORS_ORIGINS: ${{ secrets.SERVER_CORS_ORIGINS }}
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Checkout the code
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      # Step 2: Prepare SSH
+      - name: Prepare SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SERVER_SSH_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H ${{ secrets.SERVER_IP }} >> ~/.ssh/known_hosts
+
+      # Step 3: Copy Files to EC2 using rsync
+      - name: Copy Files to Server
+        run: |
+          rsync -avz --delete \
+            --exclude='.git' \
+            --exclude='.github' \
+            --exclude='README.md' \
+            --exclude='**/__pycache__' \
+            --exclude='*.pyc' \
+            -e "ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa" \
+            ./ "${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }}:/home/${{ secrets.SERVER_USER }}/app/"
+        shell: bash
+
+      # Step 4: Deploy to EC2
+      - name: Deploy to EC2
+        run: |
+          ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} <<EOF
+          set -e
+      
+          cd /home/${{ secrets.SERVER_USER }}/app
+      
+          # Create .env file
+          cat > .env <<EOL
+          SERVER_HOST=${{ secrets.SERVER_HOST }}
+          SERVER_PORT=${{ secrets.SERVER_PORT }}
+          DB_USER=${{ secrets.DB_USER }}
+          DB_PASS=${{ secrets.DB_PASS }}
+          DB_HOST=${{ secrets.DB_HOST }}
+          DB_PORT=${{ secrets.DB_PORT }}
+          DB_NAME=${{ secrets.DB_NAME }}
+          DB_DATA_VOLUME_NAME=${{ secrets.DB_DATA_VOLUME_NAME }}
+          EXPORT_DATA_VOLUME_NAME=${{ secrets.EXPORT_DATA_VOLUME_NAME }}
+          FRONTEND_URL=${{ secrets.FRONTEND_URL }}
+          SERVER_CORS_ORIGINS=${{ secrets.SERVER_CORS_ORIGINS }}
+          EOL
+          
+          # Ensure Docker is installed and running
+          sudo systemctl start docker || true
+      
+          # Add executable permissions to startup script
+          chmod +x app-start.sh
+      
+          # Pull latest images, rebuild, and restart containers
+          docker-compose pull
+          docker-compose up -d --no-deps app
+      
+          EOF

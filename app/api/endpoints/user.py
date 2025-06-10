@@ -7,7 +7,7 @@ router = APIRouter()
 
 
 @router.post("/")
-async def get(user: UserCreate, service: user_service, unit_of_work: UnitOfWorkDep):
+async def create(user: UserCreate, service: user_service, unit_of_work: UnitOfWorkDep):
     return await service.create(user, unit_of_work)
 
 

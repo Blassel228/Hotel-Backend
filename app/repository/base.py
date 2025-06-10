@@ -170,7 +170,7 @@ class SQLAlchemyRepository(AbstractRepository, Generic[ModelType]):
             action=lambda result: result.unique().scalars().one_or_none(),
         )
 
-    async def get_multi(self, offset: int = 0, limit: int | None = None, /, **filters: Any) -> Sequence[ModelType]:
+    async def get_multi(self, offset: int = 0, limit: int | None = None, **filters: Any) -> Sequence[ModelType]:
         """
         Get multiple objects
 

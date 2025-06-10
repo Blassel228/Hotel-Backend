@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, Float
+from sqlalchemy import Column, String, DECIMAL
 from sqlalchemy.orm import relationship
 
 from .base import Base, CreatedAtModel, UUIDModel
@@ -9,11 +9,11 @@ class User(Base, CreatedAtModel, UUIDModel):
 
     username = Column(String, nullable=False, unique=True)
     hashed_password = Column(String, nullable=False)
-    money_balance = Column(Float, nullable=False, default=0.0)
     email = Column(String, nullable=False, unique=True)
     name = Column(String, nullable=True)
     surname = Column(String, nullable=True)
     phone_number = Column(String, nullable=True, unique=True)
+    money_balance = Column(DECIMAL, nullable=False)
 
     bookings = relationship("Booking", back_populates="user")
 

@@ -4,7 +4,6 @@ from fastapi import APIRouter, Depends
 from fastapi.security import OAuth2PasswordRequestForm, HTTPBearer, HTTPAuthorizationCredentials
 
 from app.api.dependencies import auth_service_dep, UnitOfWorkDep
-from app.models import User
 from app.schemas.user import UserGet
 
 security = HTTPBearer()

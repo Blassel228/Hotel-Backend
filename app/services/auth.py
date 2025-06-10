@@ -8,7 +8,6 @@ from passlib.context import CryptContext
 
 from app.core import settings
 from app.models import User
-from app.schemas.user import UserGet
 from app.utils.unitofwork import UnitOfWork
 
 logger = logging.getLogger(__name__)

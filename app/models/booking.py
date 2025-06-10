@@ -9,14 +9,14 @@ class Booking(Base, CreatedAtModel, UUIDModel):
     __tablename__ = "booking"
 
     user_id = Column(UUID(as_uuid=True), ForeignKey("user.id"), nullable=False)
-    property_id = Column(UUID(as_uuid=True), ForeignKey("property.id"), nullable=False)
+    room_id = Column(UUID(as_uuid=True), ForeignKey("room.id"), nullable=False)
     price = Column(Float, nullable=False)
     start_date = Column(DateTime, nullable=False)
     end_date = Column(DateTime, nullable=False)
     status = Column(String, nullable=False, default="Pending")
 
     user = relationship("User", back_populates="bookings")
-    property = relationship("Property", back_populates="bookings")
+    room = relationship("Room", back_populates="bookings")
 
     def __repr__(self):
-        return f"<Booking(id={self.id}, property_id={self.property_id}, status={self.status})>"
+        return f"<Booking(id={self.id}, room_id={self.room_id}, status={self.status})>"

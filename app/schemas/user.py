@@ -15,7 +15,6 @@ class UserCreate(BaseModel):
 
 
 class UserGet(BaseModel):
-    id: Optional[int] = None
     username: str
     email: EmailStr
     phone_number: str

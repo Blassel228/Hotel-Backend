@@ -5,7 +5,7 @@ from pydantic import BaseModel, field_validator
 
 
 class CreateBookingIn(BaseModel):
-    property_id: UUID
+    room_id: UUID
     start_date: datetime
     end_date: datetime
 
@@ -18,7 +18,7 @@ class CreateBookingIn(BaseModel):
 
 class CreateBooking(BaseModel):
     user_id: UUID
-    property_id: UUID
+    room_id: UUID
     start_date: datetime
     price: float
     end_date: datetime

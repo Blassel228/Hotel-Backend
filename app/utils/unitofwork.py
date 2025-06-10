@@ -9,7 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_asyn
 from app.core import settings
 from app.db.database import async_session
 
-from app.repository.property import PropertyRepository
+from app.repository.room import RoomRepository
 from app.repository.user import UserRepository
 from app.repository.booking import BookingRepository
 
@@ -19,7 +19,7 @@ class ABCUnitOfWork(ABC):
 
     user: UserRepository
     booking: BookingRepository
-    property: PropertyRepository
+    room: RoomRepository
 
     @abstractmethod
     def __init__(self) -> None:
@@ -44,7 +44,7 @@ class UnitOfWork(ABCUnitOfWork):
         # Repository classes
         self.user = UserRepository(self.session)
         self.booking = BookingRepository(self.session)
-        self.property = PropertyRepository(self.session)
+        self.room = RoomRepository(self.session)
 
         return self
 

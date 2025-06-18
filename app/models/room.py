@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, Integer, Boolean, Float
+from sqlalchemy import Column, String, Integer, Boolean, Float, LargeBinary
 from sqlalchemy.orm import relationship
 from .base import Base, CreatedAtModel, UUIDModel
 
@@ -6,6 +6,10 @@ from .base import Base, CreatedAtModel, UUIDModel
 class Room(Base, CreatedAtModel, UUIDModel):
     __tablename__ = "room"
 
+    image = Column(
+        LargeBinary(length=2**24),
+        nullable=False,
+    )
     type = Column(String, nullable=False)
     price = Column(Integer, nullable=False)
     beds = Column(Integer, nullable=False)
@@ -19,7 +23,7 @@ class Room(Base, CreatedAtModel, UUIDModel):
     has_sauna = Column(Boolean, nullable=False)
     has_jacuzzi = Column(Boolean, nullable=False)
 
-    bookings = relationship("Booking", back_populates="room")
+    bookings = relationship("Booking", back_populates="room", lazy='selectin')
 
     def __repr__(self):
         return f"<Room(id={self.id}, type={self.type}, area={self.area})>"

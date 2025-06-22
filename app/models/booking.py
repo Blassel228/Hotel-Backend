@@ -14,9 +14,12 @@ class Booking(Base, CreatedAtModel, UUIDModel):
     start_date = Column(DateTime, nullable=False)
     end_date = Column(DateTime, nullable=False)
     status = Column(String, nullable=False, default="Pending")
+    special_requests = Column(String, nullable=True, default=None)
 
     user = relationship("User", back_populates="bookings")
     room = relationship("Room", back_populates="bookings")
+    guest = relationship("Guest", back_populates="booking", uselist=False)
+
 
     def __repr__(self):
         return f"<Booking(id={self.id}, room_id={self.room_id}, status={self.status})>"

@@ -13,6 +13,7 @@ class User(Base, CreatedAtModel, UUIDModel):
     name = Column(String, nullable=True)
     surname = Column(String, nullable=True)
     phone_number = Column(String, nullable=True, unique=True)
+    country = Column(String, nullable=False)
     money_balance = Column(DECIMAL, nullable=False)
 
     bookings = relationship("Booking", back_populates="user")

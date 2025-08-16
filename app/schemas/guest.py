@@ -13,6 +13,7 @@ class GuestCreateIn(BaseModel):
     whether_send_confirmation: bool = True
     is_booking_for_me: bool = True
 
+
 class GuestCreate(BaseModel):
     name: str
     surname: str
@@ -21,4 +22,3 @@ class GuestCreate(BaseModel):
     country: Optional[str] = None
     whether_send_confirmation: bool = True
     is_booking_for_me: bool = True
-    booking_id: UUID

@@ -23,7 +23,7 @@ class Room(Base, CreatedAtModel, UUIDModel):
     has_sauna = Column(Boolean, nullable=False)
     has_jacuzzi = Column(Boolean, nullable=False)
 
-    bookings = relationship("Booking", back_populates="room", lazy='selectin')
+    bookings = relationship("Booking", back_populates="room", lazy="selectin")
 
     def __repr__(self):
         return f"<Room(id={self.id}, type={self.type}, area={self.area})>"

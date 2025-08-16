@@ -1,8 +1,10 @@
 import logging
 from datetime import timedelta, datetime
-from typing import Annotated
+from typing import Annotated, Optional
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm, OAuth2PasswordBearer
+from fastapi.security.utils import get_authorization_scheme_param
+from fastapi import Request
 from jose import jwt as jose_jwt, JWTError
 from passlib.context import CryptContext
 
@@ -12,7 +14,7 @@ from app.utils.unitofwork import UnitOfWork
 
 logger = logging.getLogger(__name__)
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/auth/token/login/")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/auth/token/login/", auto_error=False)
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
@@ -103,6 +105,5 @@ class AuthService:
             raise credentials_exception
 
         return user
-
 
 auth_service = AuthService()

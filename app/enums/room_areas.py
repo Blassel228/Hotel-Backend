@@ -1,5 +1,6 @@
 from app.enums.base import BaseStrEnum
 
+
 class RoomAreas(BaseStrEnum):
     SIDE_VIEW = "Side View"
     STREET_VIEW = "Street View"

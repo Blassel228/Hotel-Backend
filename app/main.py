@@ -7,6 +7,7 @@ from app.init_app import app
 
 
 async def main():
+    print(settings.origins)
     config = uvicorn.Config(
         app,
         host=settings.SERVER_HOST,

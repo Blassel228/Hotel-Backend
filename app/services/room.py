@@ -10,7 +10,13 @@ class RoomService:
         async with unit_of_work:
             return await unit_of_work.room.get_multi(offset=offset, limit=limit)
 
-    async def search(self, unit_of_work: UnitOfWork, start_date: datetime, end_date: datetime, capacity: int = 1, ) -> Sequence[Room]:
+    async def search(
+        self,
+        unit_of_work: UnitOfWork,
+        start_date: datetime,
+        end_date: datetime,
+        capacity: int = 1,
+    ) -> Sequence[Room]:
         result = []
 
         async with unit_of_work:
@@ -23,8 +29,9 @@ class RoomService:
             if not room.bookings:
                 result.append(room)
             for booking in room.bookings:
-                if ((booking.start_date <= start_datetime <= booking.end_date)
-                        or (booking.start_date <= end_datetime<= booking.end_date)):
+                if (booking.start_date <= start_datetime <= booking.end_date) or (
+                    booking.start_date <= end_datetime <= booking.end_date
+                ):
                     continue
                 else:
                     result.append(room)

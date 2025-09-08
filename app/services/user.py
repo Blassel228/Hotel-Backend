@@ -1,5 +1,5 @@
 from app.core.exc.user import ExistingValueException
-from app.schemas.user import UserCreate, UserGet
+from app.schemas.user import UserCreate, UserGet, UserUpdate
 from app.services.auth import pwd_context
 from app.utils.unitofwork import UnitOfWork
 
@@ -34,3 +34,8 @@ class UserService:
 
         user_data.pop("hashed_password", None)
         return UserGet(**user_data)
+
+    async def update(self, data: UserUpdate, user_id: int, unit_of_work: UnitOfWork):
+        async with unit_of_work:
+            await unit_of_work.user.update(data.model_dump(exclude_none=True), id=user_id)
+            return await unit_of_work.user.get_one(id=user_id)

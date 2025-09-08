@@ -1,8 +1,9 @@
-from sqlalchemy import Column, String, DECIMAL
+from sqlalchemy import Column, String, DECIMAL, DateTime, Integer
 from sqlalchemy.orm import relationship
 
 from .base import Base, CreatedAtModel, UUIDModel
-
+from sqlalchemy import Enum as SQLEnum
+from ..enums.user_sex import UserSex
 
 class User(Base, CreatedAtModel, UUIDModel):
     __tablename__ = "user"
@@ -15,7 +16,10 @@ class User(Base, CreatedAtModel, UUIDModel):
     phone_number = Column(String, nullable=True, unique=True)
     country = Column(String, nullable=False)
     money_balance = Column(DECIMAL, nullable=False)
+    sex = Column(Integer, SQLEnum(UserSex, name="user_sex"), default=UserSex.NOT_KNOWN.value, nullable=False)
+    birthdate = Column(DateTime, nullable=True)
 
+    image = relationship("Image", back_populates="user", uselist=False)
     bookings = relationship("Booking", back_populates="user")
 
     def __repr__(self):

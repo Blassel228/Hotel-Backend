@@ -3,7 +3,6 @@ from datetime import date
 from fastapi import APIRouter
 
 from app.api.dependencies import room_service, UnitOfWorkDep
-from app.models import Room
 
 router = APIRouter()
 

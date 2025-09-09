@@ -15,5 +15,5 @@ async def update(user: UserUpdate, service: user_service, current_user: get_curr
     return await service.update(user, current_user.id, unit_of_work)
 
 @router.get("/")
-async def get_multi(user: UserCreate, service: user_service, unit_of_work: UnitOfWorkDep):
-    return await service.get_multi(user, unit_of_work)
+async def get_multi(service: user_service, unit_of_work: UnitOfWorkDep):
+    return await service.get_multi(unit_of_work)

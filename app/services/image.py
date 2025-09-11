@@ -7,9 +7,14 @@ from app.utils.unitofwork import UnitOfWork
 
 
 class ImageService:
-    async def get_one(self, unit_of_work: UnitOfWork, image_id: int):
+    async def get_one(self, unit_of_work: UnitOfWork, user_id: int):
         async with unit_of_work:
-            return await unit_of_work.image.get_one(id=image_id)
+            user = await unit_of_work.user.get_one(id=user_id)
+            image = await unit_of_work.image.get_one_or_none(id=user.image_id)
+            if image is not None:
+                return image
+            else:
+                return None
 
     async def create(self, unit_of_work: UnitOfWork, user_id: int, file: UploadFile):
         image_data = await file.read()

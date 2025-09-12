@@ -17,7 +17,7 @@ class Booking(Base, CreatedAtModel, UUIDModel):
     status = Column(String, nullable=False, default="Pending")
     special_requests = Column(String)
 
-    user = relationship("User", back_populates="bookings")
+    user = relationship("User", back_populates="bookings", lazy='select')
     room = relationship("Room", back_populates="bookings")
     guest = relationship("Guest", back_populates="bookings", uselist=False)
 

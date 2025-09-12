@@ -25,7 +25,7 @@ class CreateBooking(BaseModel):
     user_id: Optional[UUID] = None
     room_id: UUID
     price: Decimal
-    special_requests: str
+    special_requests: Optional[str] = None
     start_date: datetime
     end_date: datetime
 

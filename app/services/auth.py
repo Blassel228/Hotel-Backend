@@ -3,8 +3,6 @@ from datetime import timedelta, datetime
 from typing import Annotated, Optional
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm, OAuth2PasswordBearer
-from fastapi.security.utils import get_authorization_scheme_param
-from fastapi import Request
 from jose import jwt as jose_jwt, JWTError
 from passlib.context import CryptContext
 
@@ -59,7 +57,7 @@ class AuthService:
         Create an access token with an expiration time.
         """
         to_encode = data.copy()
-        expire = datetime.utcnow() + (expires_delta or timedelta(minutes=15))
+        expire = datetime.utcnow() + (expires_delta or timedelta(days=7))
         to_encode.update({"exp": expire})
 
         encoded_jwt = jose_jwt.encode(to_encode, settings.SECRET, algorithm=settings.ALGORITHM)

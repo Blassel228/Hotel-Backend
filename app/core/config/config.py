@@ -14,6 +14,12 @@ class Settings(BaseConfig):
     ALGORITHM: str
     SECRET: str
 
+    STRIPE_PUBLISHABLE_KEY: str
+    STRIPE_SECRET_KEY: str
+    STRIPE_SUCCESS_URL: str
+    STRIPE_CANCEL_URL: str
+    STRIPE_WEBHOOK_SECRET: str
+
     db: DataBaseConfig = DataBaseConfig()
 
     @property

@@ -14,11 +14,13 @@ class Booking(Base, CreatedAtModel, UUIDModel):
     price = Column(Float, nullable=False)
     start_date = Column(DateTime, nullable=False)
     end_date = Column(DateTime, nullable=False)
-    status = Column(String, nullable=False, default="Pending")
+    status = Column(String, nullable=False, default="Confirmed")
     special_requests = Column(String)
+    intent_id = Column(String, nullable=True)
 
     user = relationship("User", back_populates="bookings", lazy='select')
     room = relationship("Room", back_populates="bookings")
     guest = relationship("Guest", back_populates="bookings", uselist=False)
+    refund = relationship("Refund", back_populates="booking")
 
     __table_args__ = (CheckConstraint("user_id IS NOT NULL OR guest_id IS NOT NULL", name="chk_booking_user_or_guest"),)

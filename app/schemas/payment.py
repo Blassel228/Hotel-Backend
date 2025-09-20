@@ -14,3 +14,7 @@ class CreateCheckoutSessionRequest(BaseModel):
     currency: str = Field(default="usd", pattern="^[a-zA-Z]{3}$")
     special_requests: Optional[str] = None
     guest_data: Optional[GuestCreateIn] = None
+
+class CreateRefundRequest(BaseModel):
+    booking_id: str
+    refund_reason: str

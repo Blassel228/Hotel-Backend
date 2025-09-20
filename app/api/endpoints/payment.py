@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException
 
 from app.api.dependencies import UnitOfWorkDep, get_current_user, payment_service
-from app.schemas.payment import CreateCheckoutSessionRequest
+from app.schemas.payment import CreateCheckoutSessionRequest, CreateRefundRequest
 
 router = APIRouter()
 
@@ -32,3 +32,7 @@ async def create_checkout_session_without_token(
         unit_of_work=unit_of_work, user_id=None, request=request
     )
     return {"url": url}
+
+@router.post("/refund_booking")
+async def refund_booking(unit_of_work: UnitOfWorkDep, request: CreateRefundRequest, service: payment_service):
+    return await service.refund_booking(unit_of_work=unit_of_work, request=request)

@@ -4,9 +4,10 @@ from typing import Optional
 
 import stripe
 from app.core import settings
+from app.enums.booking_status import BookingStatus
 from app.schemas.booking import CreateBooking
 from app.schemas.guest import GuestCreate
-from app.schemas.payment import CreateCheckoutSessionRequest
+from app.schemas.payment import CreateCheckoutSessionRequest, CreateRefundRequest
 from app.utils.unitofwork import UnitOfWork
 import logging
 from app.core.exc.payment import PaymentProviderException, PaymentVerificationFailed
@@ -89,7 +90,12 @@ class PaymentService:
             logger.warning(f"Payment not completed for session {session_id}. Status: {session.payment_status}")
             raise PaymentVerificationFailed(detail="Payment is not completed")
 
+        intent_id = session.payment_intent
+        if not intent_id:
+            raise PaymentVerificationFailed(detail="Payment intent ID not found")
+
         metadata = session.metadata
+
         required_keys = ["room_id", "start_date", "end_date", "price", "currency", "special_requests"]
         for key in required_keys:
             if key not in metadata:
@@ -114,11 +120,12 @@ class PaymentService:
                 raise PaymentVerificationFailed(detail="Failed to create guest record")
 
         booking_data = CreateBooking(
+            intent_id=intent_id,
             room_id=metadata["room_id"],
             price=float(metadata["price"]),
             start_date=start_date,
             end_date=end_date,
-            status="Confirmed",
+            status=BookingStatus.CONFIRMED.CONFIRMED,
             special_requests=metadata["special_requests"] or None,
             user_id=metadata.get("user_id") or None,
             guest_id=guest_id,
@@ -149,6 +156,65 @@ class PaymentService:
             "message": "Booking created after successful payment",
         }
 
+    async def refund_booking(
+            self,
+            unit_of_work: UnitOfWork,
+            request: CreateRefundRequest
+    ) -> dict:
+        async with unit_of_work:
+            booking = await unit_of_work.booking.get_one(id=request.booking_id)
+
+            if not booking.intent_id:
+                raise PaymentVerificationFailed(detail="No payment intent associated with this booking")
+
+        refund_amount = self.calculate_refund_amount(booking)
+
+        try:
+            stripe_refund = stripe.Refund.create(
+                payment_intent=booking.intent_id,
+                amount=refund_amount,
+                reason="requested_by_customer",
+            )
+
+            logger.info(
+                f"Refund {stripe_refund.id} initiated for booking {request.booking_id}, intent {booking.intent_id}")
+
+        except stripe.StripeError as e:
+            logger.error(f"Stripe refund failed for booking {request.booking_id}: {str(e)}")
+            raise PaymentProviderException(detail=f"Refund failed: {str(e)}")
+
+        return {
+            "status": "initiated",
+            "refund_id": stripe_refund.id,
+            "amount_refunded": stripe_refund.amount / 100.0,
+            "currency": stripe_refund.currency,
+            "booking_id": request.booking_id,
+            "refund_reason": request.refund_reason,
+            "message": "Refund initiated. Waiting for webhook confirmation."
+        }
+
     @staticmethod
     def convert_to_minor_units(amount: float) -> float:
         return amount * 100
+
+    @staticmethod
+    def calculate_refund_amount(booking) -> float:
+        """
+        Calculate refund amount based on days left before check-in:
+        - > 12: 100% refund
+        - 12 to 10 days: 70% refund
+        - 7 to 9 days: 50% refund
+        - < 7 days: 35% refund
+        """
+        now = datetime.now()
+        days_until_checkin = (booking.start_date - now).days
+        refund_percent = 1
+
+        if 12 >= days_until_checkin >= 10:
+            refund_percent = 0.70
+        elif days_until_checkin >= 7:  # 7 to 9 days
+            refund_percent = 0.50
+        else:  # less than 7 days
+            refund_percent = 0.35
+
+        return int(round(booking.price * refund_percent * 100))

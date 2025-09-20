@@ -5,6 +5,8 @@ from decimal import Decimal
 
 from pydantic import BaseModel, field_validator
 
+from app.enums.booking_status import BookingStatus
+
 
 class CreateBookingIn(BaseModel):
     room_id: UUID
@@ -23,6 +25,8 @@ class CreateBookingIn(BaseModel):
 class CreateBooking(BaseModel):
     guest_id: Optional[UUID] = None
     user_id: Optional[UUID] = None
+    intent_id: str
+    status: str = BookingStatus.CONFIRMED.value
     room_id: UUID
     price: Decimal
     special_requests: Optional[str] = None

@@ -7,22 +7,11 @@ from app.schemas.guest import GuestCreateIn
 router = APIRouter()
 
 
-@router.post("/create_booking_with_token")
-async def create(
-    booking_in: CreateBookingIn,
-    guest_in: GuestCreateIn,
-    service: booking_service,
-    unit_of_work: UnitOfWorkDep,
-    current_user: get_current_user,
-):
-    return await service.create_with_token(booking_in, guest_in, unit_of_work, current_user.id)
+@router.put("/cancel_booking/{id}")
+async def update_to_cancel_status(id: str, unit_of_work: UnitOfWorkDep, service: booking_service):
+    return await service.cancel_booking(unit_of_work=unit_of_work, id=id)
 
-@router.post("/create_booking_without_token")
-async def create_without_token(
-    booking_in: CreateBookingIn,
-    guest_in: GuestCreateIn,
-    service: booking_service,
-    unit_of_work: UnitOfWorkDep,
-):
-    return await service.create_without_token(booking_in, guest_in, unit_of_work)
+@router.get("/get_bookings_for_one_user")
+async def get_bookings_for_one_user(current_user: get_current_user, unit_of_work: UnitOfWorkDep, service: booking_service):
+    return await service.get_bookings_for_one_user(user_id=current_user.id, unit_of_work=unit_of_work)
 

@@ -2,7 +2,7 @@ from datetime import date
 
 from fastapi import APIRouter
 
-from app.api.dependencies import room_service, UnitOfWorkDep
+from app.api.dependencies import room_service, UnitOfWorkDep, get_current_user
 
 router = APIRouter()
 
@@ -15,3 +15,7 @@ async def get(service: room_service, unit_of_work: UnitOfWorkDep, offset: int = 
 @router.get("/search/{start_date}/{end_date}/{capacity}")
 async def search(unit_of_work: UnitOfWorkDep, start_date: date, end_date: date, capacity: int, service: room_service):
     return await service.search(unit_of_work=unit_of_work, start_date=start_date, end_date=end_date, capacity=capacity)
+
+@router.get("/get_one/{room_id}")
+async def get_one(room_id: str, unit_of_work: UnitOfWorkDep, service: room_service):
+    return await service.get_one(room_id=room_id, unit_of_work=unit_of_work)

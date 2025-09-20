@@ -8,6 +8,8 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_asyn
 
 from app.core import settings
 from app.db.database import async_session
+from app.repository import RefundRepository
+from app.repository import RefreshTokenRepository
 
 from app.repository.guest import GuestRepository
 from app.repository.image import ImageRepository
@@ -24,6 +26,8 @@ class ABCUnitOfWork(ABC):
     room: RoomRepository
     guest: GuestRepository
     image: ImageRepository
+    refund: RefundRepository
+    refresh_token: RefreshTokenRepository
 
     @abstractmethod
     def __init__(self) -> None:
@@ -51,6 +55,8 @@ class UnitOfWork(ABCUnitOfWork):
         self.room = RoomRepository(self.session)
         self.guest = GuestRepository(self.session)
         self.image = ImageRepository(self.session)
+        self.refund = RefundRepository(self.session)
+        self.refresh_token = RefreshTokenRepository(self.session)
 
         return self
 

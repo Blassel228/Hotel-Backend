@@ -6,6 +6,10 @@ from datetime import datetime
 
 
 class RoomService:
+    async def get_one(self, unit_of_work: UnitOfWork, room_id: str):
+        async with unit_of_work:
+            return await unit_of_work.room.get_one(id=room_id)
+
     async def get_all(self, unit_of_work: UnitOfWork, offset: int = 0, limit: int = None) -> Sequence[Room]:
         async with unit_of_work:
             return await unit_of_work.room.get_multi(offset=offset, limit=limit)

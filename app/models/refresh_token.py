@@ -6,7 +6,7 @@ class RefreshToken(Base, CreatedAtModel, UUIDModel):
     __tablename__ = "refresh_token"
 
     token = Column(String(512), unique=True, nullable=False, index=True)
-    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False, index=True)
+    user_id = Column(UUID(as_uuid=True), ForeignKey("user.id"), nullable=False, index=True)
 
     expires_at = Column(DateTime, nullable=False)
 

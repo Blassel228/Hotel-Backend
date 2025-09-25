@@ -20,6 +20,8 @@ class Settings(BaseConfig):
     STRIPE_CANCEL_URL: str
     STRIPE_WEBHOOK_SECRET: str
 
+    ACCESS_TOKEN_EXPIRE_MINUTES: int
+
     db: DataBaseConfig = DataBaseConfig()
 
     @property

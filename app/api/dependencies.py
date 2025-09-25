@@ -1,8 +1,7 @@
-from typing import Annotated, Optional
+from typing import Annotated
 
 from fastapi import Depends
 
-from app.models import User
 from app.schemas.token import TokenData
 
 from app.services.auth import auth_service

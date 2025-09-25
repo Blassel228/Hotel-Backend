@@ -1,6 +1,7 @@
 from typing import Sequence
 
 from sqlalchemy import select
+
 from app.models import Room
 from app.repository.base import SQLAlchemyRepository
 

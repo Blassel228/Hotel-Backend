@@ -1,10 +1,11 @@
-from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy import Column, String, DECIMAL, DateTime, Integer, ForeignKey
+from sqlalchemy import Enum as SQLEnum
+from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 
 from .base import Base, CreatedAtModel, UUIDModel
-from sqlalchemy import Enum as SQLEnum
 from ..enums.user_sex import UserSex
+
 
 class User(Base, CreatedAtModel, UUIDModel):
     __tablename__ = "user"

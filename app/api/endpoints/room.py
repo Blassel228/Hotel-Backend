@@ -2,7 +2,7 @@ from datetime import date
 
 from fastapi import APIRouter
 
-from app.api.dependencies import room_service, UnitOfWorkDep, get_current_user
+from app.api.dependencies import room_service, UnitOfWorkDep
 
 router = APIRouter()
 

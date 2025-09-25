@@ -1,10 +1,10 @@
-import os
 import asyncio  # Added for async functionality
+import os
 
 from app.enums.room_areas import RoomAreas
 from app.enums.room_types import RoomType
-from app.utils.unitofwork import UnitOfWork  # No changes to imports
 from app.schemas.room import RoomBase  # No changes to imports
+from app.utils.unitofwork import UnitOfWork  # No changes to imports
 
 # Instantiate ABCUnitOfWork instead of assigning the class itself
 unit_of_work = UnitOfWork()  # Changed: Create an instance of ABCUnitOfWork
@@ -172,7 +172,6 @@ async def populate_properties_with_images(folder_path):
     #         "image": "image11.txt",
     #     },
     # ]
-    from enum import Enum  # або твій BaseStrEnum — залежить від реалізації
 
     # Припускаємо, що RoomType і RoomAreas вже імпортовані
     # from your_module import RoomType, RoomAreas

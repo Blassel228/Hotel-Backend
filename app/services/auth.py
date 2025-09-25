@@ -1,10 +1,11 @@
 import logging
 import secrets
+from datetime import timedelta, datetime, timezone
 from typing import Annotated
+
 from fastapi import Depends, HTTPException, status
 from fastapi.openapi.models import Response
 from fastapi.security import OAuth2PasswordRequestForm, OAuth2PasswordBearer
-from datetime import timedelta, datetime, timezone
 from jose import jwt as jose_jwt, JWTError
 from passlib.context import CryptContext
 

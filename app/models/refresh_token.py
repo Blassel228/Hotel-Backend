@@ -1,6 +1,8 @@
 from sqlalchemy import Column, String, Boolean, ForeignKey, DateTime
 from sqlalchemy.dialects.postgresql import UUID
+
 from .base import Base, CreatedAtModel, UUIDModel
+
 
 class RefreshToken(Base, CreatedAtModel, UUIDModel):
     __tablename__ = "refresh_token"

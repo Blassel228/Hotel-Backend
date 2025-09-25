@@ -3,15 +3,14 @@ from typing import Annotated
 from fastapi import Depends
 
 from app.schemas.token import TokenData
-
-from app.services.auth import auth_service
 from app.services.auth import AuthService
+from app.services.auth import auth_service
 from app.services.booking import BookingService
+from app.services.guest import GuestService
 from app.services.image import ImageService
 from app.services.payment import PaymentService
 from app.services.room import RoomService
 from app.services.user import UserService
-from app.services.guest import GuestService
 from app.utils.unitofwork import ABCUnitOfWork, UnitOfWork
 
 UnitOfWorkDep = Annotated[ABCUnitOfWork, Depends(UnitOfWork)]

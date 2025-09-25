@@ -1,5 +1,6 @@
 from sqlalchemy import Column, String, Integer, Boolean, Float, LargeBinary
 from sqlalchemy.orm import relationship
+
 from .base import Base, CreatedAtModel, UUIDModel
 
 

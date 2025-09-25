@@ -1,8 +1,6 @@
 from fastapi import APIRouter
 
 from app.api.dependencies import booking_service, UnitOfWorkDep, get_current_user
-from app.schemas.booking import CreateBookingIn
-from app.schemas.guest import GuestCreateIn
 
 router = APIRouter()
 

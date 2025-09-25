@@ -1,8 +1,8 @@
+from datetime import datetime
 from typing import Sequence
 
 from app.models import Room
 from app.utils.unitofwork import UnitOfWork
-from datetime import datetime
 
 
 class RoomService:

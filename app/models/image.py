@@ -11,4 +11,3 @@ class Image(Base, CreatedAtModel, UUIDModel):
     image_data = Column(LargeBinary, nullable=True)
 
     user = relationship("User", back_populates="image", uselist=False)
-

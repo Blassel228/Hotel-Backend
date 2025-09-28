@@ -2,6 +2,7 @@ from datetime import datetime
 from typing import Sequence
 
 from app.models import Room
+from app.schemas.room import RoomFilterParams
 from app.utils.unitofwork import UnitOfWork
 
 
@@ -13,6 +14,19 @@ class RoomService:
     async def get_all(self, unit_of_work: UnitOfWork, offset: int = 0, limit: int = None) -> Sequence[Room]:
         async with unit_of_work:
             return await unit_of_work.room.get_multi(offset=offset, limit=limit)
+
+    async def get_with_filters(
+        self, unit_of_work: UnitOfWork, filters: RoomFilterParams
+    ):
+        filter_dict = {k: v for k, v in filters.__dict__.items() if v is not None}
+        print(filter_dict)
+        lowest_price = filter_dict.pop("lowest_price", 0)
+        greatest_price = filter_dict.pop("greatest_price", None)
+        async with unit_of_work:
+            rooms = await unit_of_work.room.get_multi(**filter_dict)
+        if lowest_price and greatest_price:
+            rooms = [ room for room in rooms if lowest_price < room.price < greatest_price]
+        return rooms
 
     async def search(
         self,

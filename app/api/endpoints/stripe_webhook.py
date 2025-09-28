@@ -24,9 +24,7 @@ async def stripe_webhook(
     sig_header = request.headers.get("stripe-signature")
 
     try:
-        event = stripe.Webhook.construct_event(
-            payload, sig_header, settings.STRIPE_WEBHOOK_SECRET
-        )
+        event = stripe.Webhook.construct_event(payload, sig_header, settings.STRIPE_WEBHOOK_SECRET)
     except ValueError:
         logger.error("Invalid payload")
         raise HTTPException(status_code=400, detail="Invalid payload")
@@ -39,9 +37,7 @@ async def stripe_webhook(
         session_id = session["id"]
 
         try:
-            result = await service.handle_successful_payment_and_create_booking(
-                unit_of_work, session_id
-            )
+            result = await service.handle_successful_payment_and_create_booking(unit_of_work, session_id)
             logger.info(f"✅ Booking created via webhook: {result}")
             return result
 
@@ -52,7 +48,6 @@ async def stripe_webhook(
         except Exception as e:
             logger.error(f"Unexpected error during booking creation: {str(e)}")
             return {"status": "failed", "reason": "Internal error"}
-
 
     elif event["type"] == "refund.created":
         refund = event["data"]["object"]
@@ -91,18 +86,13 @@ async def stripe_webhook(
                 )
 
                 await unit_of_work.refund.create(refund_data)
-                await unit_of_work.booking.update(
-                    {"status": BookingStatus.REFUNDED.value},
-                    id=booking.id
-                )
+                await unit_of_work.booking.update({"status": BookingStatus.REFUNDED.value}, id=booking.id)
 
             logger.info(f"✅ Refund {stripe_refund_id} processed for booking {booking.id}")
 
             return {"status": "success", "refund_id": stripe_refund_id}
 
-
         except Exception as e:
-
             logger.error(f"Failed to process refund webhook: {str(e)}")
 
             return {"status": "failed", "reason": str(e)}

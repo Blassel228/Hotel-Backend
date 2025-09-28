@@ -15,9 +15,9 @@ class RefreshTokenRepository(SQLAlchemyRepository):
         await self.execute(stmt)
 
     async def revoke_all_for_user(self, user_id: UUID) -> None:
-        stmt = update(RefreshToken).where(
-            RefreshToken.user_id == user_id,
-            RefreshToken.revoked == False,
-            RefreshToken.used == False
-        ).values(revoked=True, used=True)
+        stmt = (
+            update(RefreshToken)
+            .where(RefreshToken.user_id == user_id, RefreshToken.revoked == False, RefreshToken.used == False)
+            .values(revoked=True, used=True)
+        )
         await self.execute(stmt)

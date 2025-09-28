@@ -49,7 +49,6 @@ class AuthService:
 
         return user
 
-
     async def authenticate_user(self, username: str, password: str, unit_of_work: UnitOfWork):
         """
         Verify the user's credentials against the database.
@@ -63,13 +62,12 @@ class AuthService:
         return user
 
     async def rotate_refresh_token(
-            self,
-            unit_of_work: UnitOfWork,
-            refresh_token_str: str,
-            response: Response
+        self, unit_of_work: UnitOfWork, refresh_token_str: str, response: Response
     ) -> TokenResponse:
         async with unit_of_work:
-            token_record = await unit_of_work.refresh_token.get_one_or_none(token=refresh_token_str, revoked=False, used=False)
+            token_record = await unit_of_work.refresh_token.get_one_or_none(
+                token=refresh_token_str, revoked=False, used=False
+            )
 
         if not token_record:
             raise HTTPException(status_code=401, detail="Invalid refresh token")
@@ -78,11 +76,10 @@ class AuthService:
             raise HTTPException(status_code=401, detail="Refresh token expired")
 
         async with unit_of_work:
-
             await unit_of_work.refresh_token.update({"used": True, "revoked": True}, id=token_record.id)
 
             new_refresh_value = secrets.token_urlsafe(64)
-            new_refresh_expires = timedelta(seconds=15)
+            new_refresh_expires = timedelta(days=7)
 
             new_refresh_token = RefreshTokenCreate(
                 token=new_refresh_value,
@@ -94,7 +91,7 @@ class AuthService:
 
             await unit_of_work.refresh_token.create(new_refresh_token)
 
-            access_token_expires = timedelta(seconds=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+            access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
             access_token = self.create_access_token(
                 data={"sub": str(token_record.user_id)},
                 expires_delta=access_token_expires,
@@ -116,12 +113,8 @@ class AuthService:
             expires_in=int(access_token_expires.total_seconds()),
         )
 
-
     async def login_get_token(
-        self,
-        form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
-        unit_of_work: UnitOfWork,
-        response: Response
+        self, form_data: Annotated[OAuth2PasswordRequestForm, Depends()], unit_of_work: UnitOfWork, response: Response
     ):
         """
         Генерує access_token + refresh_token після успішного логіну.
@@ -135,14 +128,14 @@ class AuthService:
                 headers={"WWW-Authenticate": "Bearer"},
             )
 
-        access_token_expires = timedelta(seconds=15)
+        access_token_expires = timedelta(minutes=15)
         access_token = self.create_access_token(
             data={"sub": str(user.id), "email": user.email, "username": user.username},
             expires_delta=access_token_expires,
         )
 
         refresh_token_value = secrets.token_urlsafe(64)
-        refresh_token_expires = timedelta(seconds=15)
+        refresh_token_expires = timedelta(days=7)
 
         new_refresh_token = RefreshTokenCreate(
             token=refresh_token_value,
@@ -163,7 +156,7 @@ class AuthService:
             httponly=True,
             secure=False,
             samesite="strict",
-            max_age=60,
+            max_age=int(refresh_token_expires.total_seconds()),
         )
 
         return {
@@ -172,11 +165,7 @@ class AuthService:
             "expires_in": int(access_token_expires.total_seconds()),
         }
 
-    async def logout_everywhere(
-        self,
-        current_user: User,
-        unit_of_work: UnitOfWork
-    ):
+    async def logout_everywhere(self, current_user: User, unit_of_work: UnitOfWork):
         async with unit_of_work:
             await unit_of_work.refresh_token.revoke_all_for_user(current_user.id)
         return {"message": "All sessions revoked"}
@@ -192,5 +181,6 @@ class AuthService:
 
         encoded_jwt = jose_jwt.encode(to_encode, settings.SECRET, algorithm=settings.ALGORITHM)
         return encoded_jwt
+
 
 auth_service = AuthService()

@@ -15,6 +15,7 @@ class CreateCheckoutSessionRequest(BaseModel):
     special_requests: Optional[str] = None
     guest_data: Optional[GuestCreateIn] = None
 
+
 class CreateRefundRequest(BaseModel):
     booking_id: str
     refund_reason: str

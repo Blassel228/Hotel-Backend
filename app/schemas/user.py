@@ -12,7 +12,6 @@ class UserCreate(BaseModel):
     phone_number: str
     name: str
     surname: str
-    money_balance: Optional[float] = 0
 
 
 class UserGet(BaseModel):
@@ -22,7 +21,7 @@ class UserGet(BaseModel):
     phone_number: str
     name: str
     surname: str
-    money_balance: float
+
 
 class UserUpdate(BaseModel):
     name: Optional[str] = None

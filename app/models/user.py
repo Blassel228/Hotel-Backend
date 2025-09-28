@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, DECIMAL, DateTime, Integer, ForeignKey
+from sqlalchemy import Column, String, DateTime, Integer, ForeignKey, Boolean
 from sqlalchemy import Enum as SQLEnum
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
@@ -17,8 +17,8 @@ class User(Base, CreatedAtModel, UUIDModel):
     surname = Column(String, nullable=True)
     phone_number = Column(String, nullable=True, unique=True)
     country = Column(String, nullable=False)
-    money_balance = Column(DECIMAL, nullable=False)
     sex = Column(Integer, SQLEnum(UserSex, name="user_sex"), default=UserSex.NOT_KNOWN.value, nullable=False)
+    is_admin = Column(Boolean, default=False, nullable=False)
     birthdate = Column(DateTime, nullable=True)
     image_id = Column(UUID, ForeignKey("image.id"), nullable=True)
 

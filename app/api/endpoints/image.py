@@ -6,12 +6,18 @@ router = APIRouter()
 
 
 @router.post("/")
-async def create(service: image_service, current_user: get_current_user, unit_of_work: UnitOfWorkDep, file: UploadFile = File(...)):
+async def create(
+    service: image_service, current_user: get_current_user, unit_of_work: UnitOfWorkDep, file: UploadFile = File(...)
+):
     return await service.create(unit_of_work=unit_of_work, user_id=current_user.id, file=file)
 
+
 @router.put("/")
-async def update(service: image_service, unit_of_work: UnitOfWorkDep, current_user: get_current_user, file: UploadFile = File(...)):
+async def update(
+    service: image_service, unit_of_work: UnitOfWorkDep, current_user: get_current_user, file: UploadFile = File(...)
+):
     return await service.update(unit_of_work=unit_of_work, user_id=current_user.id, file=file)
+
 
 @router.get("/")
 async def update(service: image_service, unit_of_work: UnitOfWorkDep, current_user: get_current_user):

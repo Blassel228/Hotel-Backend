@@ -18,7 +18,7 @@ class Booking(Base, CreatedAtModel, UUIDModel):
     special_requests = Column(String)
     intent_id = Column(String, nullable=True)
 
-    user = relationship("User", back_populates="bookings", lazy='select')
+    user = relationship("User", back_populates="bookings", lazy="select")
     room = relationship("Room", back_populates="bookings")
     guest = relationship("Guest", back_populates="bookings", uselist=False)
     refund = relationship("Refund", back_populates="booking")

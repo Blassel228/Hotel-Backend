@@ -6,6 +6,10 @@ from app.utils.unitofwork import UnitOfWork
 
 
 class BookingService:
+    async def get_one(self, booking_id: str, unit_of_work: UnitOfWork):
+        async with unit_of_work:
+            return await unit_of_work.booking.get_one(id=booking_id)
+
     async def cancel_booking(self, id: str, unit_of_work: UnitOfWork):
         async with unit_of_work:
             await unit_of_work.booking.update({"status": BookingStatus.CANCELLED.value}, id=id)

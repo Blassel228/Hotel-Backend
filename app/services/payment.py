@@ -157,11 +157,7 @@ class PaymentService:
             "message": "Booking created after successful payment",
         }
 
-    async def refund_booking(
-            self,
-            unit_of_work: UnitOfWork,
-            request: CreateRefundRequest
-    ) -> dict:
+    async def refund_booking(self, unit_of_work: UnitOfWork, request: CreateRefundRequest) -> dict:
         async with unit_of_work:
             booking = await unit_of_work.booking.get_one(id=request.booking_id)
 
@@ -178,7 +174,8 @@ class PaymentService:
             )
 
             logger.info(
-                f"Refund {stripe_refund.id} initiated for booking {request.booking_id}, intent {booking.intent_id}")
+                f"Refund {stripe_refund.id} initiated for booking {request.booking_id}, intent {booking.intent_id}"
+            )
 
         except stripe.StripeError as e:
             logger.error(f"Stripe refund failed for booking {request.booking_id}: {str(e)}")
@@ -191,7 +188,7 @@ class PaymentService:
             "currency": stripe_refund.currency,
             "booking_id": request.booking_id,
             "refund_reason": request.refund_reason,
-            "message": "Refund initiated. Waiting for webhook confirmation."
+            "message": "Refund initiated. Waiting for webhook confirmation.",
         }
 
     @staticmethod

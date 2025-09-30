@@ -3,7 +3,7 @@ from datetime import date
 from fastapi import APIRouter, Depends
 
 from app.api.dependencies import room_service, UnitOfWorkDep
-from app.schemas.room import RoomFilterParams
+from app.schemas.room import RoomFilterParams, RoomUpdate
 
 router = APIRouter()
 
@@ -22,6 +22,9 @@ async def search(unit_of_work: UnitOfWorkDep, start_date: date, end_date: date, 
 async def get_one(room_id: str, unit_of_work: UnitOfWorkDep, service: room_service):
     return await service.get_one(room_id=room_id, unit_of_work=unit_of_work)
 
+@router.put("/{room_id}")
+async def update(room_id: str, unit_of_work: UnitOfWorkDep, service: room_service, room: RoomUpdate):
+    return await service.update(room_id=room_id, unit_of_work=unit_of_work, room=room)
 
 @router.get("/get_with_filters")
 async def get_with_filters(

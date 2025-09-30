@@ -30,6 +30,12 @@ class RoomFilters(BaseModel):
     bathes: Optional[int] = None
 
 
+class RoomUpdate(BaseModel):
+    price: Optional[float] = None
+    beds: Optional[int] = None
+    type: Optional[RoomType] = None
+    capacity: Optional[int] = None
+
 class RoomFilterParams:
     def __init__(
         self,

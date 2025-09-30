@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import Sequence
 
 from app.models import Room
-from app.schemas.room import RoomFilterParams
+from app.schemas.room import RoomFilterParams, RoomUpdate
 from app.utils.unitofwork import UnitOfWork
 
 
@@ -27,6 +27,10 @@ class RoomService:
         if lowest_price and greatest_price:
             rooms = [ room for room in rooms if lowest_price < room.price < greatest_price]
         return rooms
+
+    async def update(self, unit_of_work: UnitOfWork, room_id: str, room: RoomUpdate):
+        async with unit_of_work:
+            await unit_of_work.room.update(room.model_dump(exclude_none=True), id=room_id)
 
     async def search(
         self,

@@ -210,9 +210,9 @@ class PaymentService:
 
         if 12 >= days_until_checkin >= 10:
             refund_percent = 0.70
-        elif days_until_checkin >= 7:  # 7 to 9 days
+        elif 9 >= days_until_checkin >= 7:  # 7 to 9 days
             refund_percent = 0.50
-        else:  # less than 7 days
+        elif days_until_checkin < 7:  # less than 7 days
             refund_percent = 0.35
 
         return int(round(booking.price * refund_percent * 100))

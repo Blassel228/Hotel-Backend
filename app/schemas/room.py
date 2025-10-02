@@ -30,7 +30,44 @@ class RoomFilters(BaseModel):
     bathes: Optional[int] = None
 
 
+class RoomCreate(BaseModel):
+    image: bytes
+    type: RoomType
+    price: float
+    beds: int
+    bedrooms: int
+    bathes: int
+    floor: int
+    area: RoomAreas
+    capacity: int
+    description: str
+    total_space: float
+    has_sauna: bool
+    has_jacuzzi: bool
+
+class RoomCreateIn(BaseModel):
+    type: RoomType
+    price: float
+    beds: int
+    bedrooms: int
+    bathes: int
+    floor: int
+    area: RoomAreas
+    capacity: int
+    description: str
+    total_space: float
+    has_sauna: bool
+    has_jacuzzi: bool
+
 class RoomUpdate(BaseModel):
+    image: Optional[bytes] = None
+    price: Optional[float] = None
+    beds: Optional[int] = None
+    type: Optional[RoomType] = None
+    capacity: Optional[int] = None
+
+class RoomUpdateIn(BaseModel):
+    image: Optional[str] = None
     price: Optional[float] = None
     beds: Optional[int] = None
     type: Optional[RoomType] = None

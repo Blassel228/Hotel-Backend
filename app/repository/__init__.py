@@ -5,3 +5,4 @@ from .refresh_token import RefreshTokenRepository
 from .refund import RefundRepository
 from .room import RoomRepository
 from .user import UserRepository
+from .rating import RatingRepository

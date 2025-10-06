@@ -9,6 +9,7 @@ from app.services.booking import BookingService
 from app.services.guest import GuestService
 from app.services.image import ImageService
 from app.services.payment import PaymentService
+from app.services.rating import RatingService
 from app.services.room import RoomService
 from app.services.user import UserService
 from app.utils.unitofwork import ABCUnitOfWork, UnitOfWork
@@ -24,3 +25,4 @@ booking_service = Annotated[BookingService, Depends(BookingService)]
 guest_service = Annotated[GuestService, Depends(GuestService)]
 image_service = Annotated[ImageService, Depends(ImageService)]
 payment_service = Annotated[PaymentService, Depends(PaymentService)]
+rating_service = Annotated[RatingService, Depends(RatingService)]

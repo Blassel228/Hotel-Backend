@@ -38,3 +38,7 @@ class BookingService:
     async def get_bookings_for_one_user(self, user_id: str, unit_of_work: UnitOfWork):
         async with unit_of_work:
             return await unit_of_work.booking.get_multi(user_id=user_id)
+
+    async def get_bookings_for_rooms_not_rated_by_user(self, user_id: str, unit_of_work: UnitOfWork):
+        async with unit_of_work:
+            return await unit_of_work.booking.get_bookings_for_rooms_not_rated_by_user(user_id=user_id)

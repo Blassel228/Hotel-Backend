@@ -3,7 +3,7 @@ from datetime import date
 
 from fastapi import APIRouter, Depends, Form, File, UploadFile
 
-from app.api.dependencies import room_service, UnitOfWorkDep
+from app.api.dependencies import room_service, UnitOfWorkDep, get_current_user
 from app.schemas.room import RoomFilterParams, RoomUpdate, RoomCreateIn, RoomUpdateIn
 
 router = APIRouter()
@@ -46,3 +46,7 @@ async def get_with_filters(
     return await service.get_with_filters(
         unit_of_work=unit_of_work, filters=filters
     )
+
+@router.get("/get_rooms_booked_not_rated_by_user")
+async def get_rooms_booked_not_rated_by_user(unit_of_work: UnitOfWorkDep, service: room_service, current_user: get_current_user):
+    return await service.get_rooms_booked_not_rated_by_user(unit_of_work=unit_of_work, user_id=current_user.id)

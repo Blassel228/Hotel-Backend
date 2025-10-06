@@ -79,3 +79,7 @@ class RoomService:
                     result.append(room)
                     print(result)
         return result
+
+    async def get_rooms_booked_not_rated_by_user(self, unit_of_work: UnitOfWork, user_id: str):
+        async with unit_of_work:
+            return await unit_of_work.room.get_rooms_booked_not_rated_by_user(user_id=user_id)

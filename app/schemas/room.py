@@ -45,6 +45,7 @@ class RoomCreate(BaseModel):
     has_sauna: bool
     has_jacuzzi: bool
 
+
 class RoomCreateIn(BaseModel):
     type: RoomType
     price: float
@@ -59,6 +60,7 @@ class RoomCreateIn(BaseModel):
     has_sauna: bool
     has_jacuzzi: bool
 
+
 class RoomUpdate(BaseModel):
     image: Optional[bytes] = None
     price: Optional[float] = None
@@ -66,12 +68,14 @@ class RoomUpdate(BaseModel):
     type: Optional[RoomType] = None
     capacity: Optional[int] = None
 
+
 class RoomUpdateIn(BaseModel):
     image: Optional[str] = None
     price: Optional[float] = None
     beds: Optional[int] = None
     type: Optional[RoomType] = None
     capacity: Optional[int] = None
+
 
 class RoomFilterParams:
     def __init__(

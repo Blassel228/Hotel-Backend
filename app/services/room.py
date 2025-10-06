@@ -22,9 +22,7 @@ class RoomService:
         async with unit_of_work:
             return await unit_of_work.room.create(room)
 
-    async def get_with_filters(
-        self, unit_of_work: UnitOfWork, filters: RoomFilterParams
-    ):
+    async def get_with_filters(self, unit_of_work: UnitOfWork, filters: RoomFilterParams):
         filter_dict = {k: v for k, v in filters.__dict__.items() if v is not None}
         print(filter_dict)
         lowest_price = filter_dict.pop("lowest_price", 0)
@@ -32,7 +30,7 @@ class RoomService:
         async with unit_of_work:
             rooms = await unit_of_work.room.get_multi(**filter_dict)
         if lowest_price and greatest_price:
-            rooms = [ room for room in rooms if lowest_price < room.price < greatest_price]
+            rooms = [room for room in rooms if lowest_price < room.price < greatest_price]
         return rooms
 
     async def update(self, unit_of_work: UnitOfWork, room_id: str, room: RoomUpdateIn):

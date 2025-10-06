@@ -13,22 +13,9 @@ class BookingRepository(SQLAlchemyRepository):
         """
         Get bookings of the given user for rooms that the user has NOT rated yet.
         """
-        rating_exists = exists().where(
-            Rating.user_id == user_id,
-            Rating.room_id == self.model.room_id
-        )
+        rating_exists = exists().where(Rating.user_id == user_id, Rating.room_id == self.model.room_id)
 
-        statement = (
-            select(self.model)
-            .where(
-                self.model.user_id == user_id,
-                ~rating_exists
-            )
-            .distinct()
-        )
+        statement = select(self.model).where(self.model.user_id == user_id, ~rating_exists).distinct()
 
         statement = self.add_loading_options(statement)
-        return await self.execute(
-            statement=statement,
-            action=lambda result: result.unique().scalars().all()
-        )
+        return await self.execute(statement=statement, action=lambda result: result.unique().scalars().all())

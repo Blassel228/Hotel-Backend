@@ -23,6 +23,7 @@ async def get_bookings_for_one_user(booking_id: str, unit_of_work: UnitOfWorkDep
 
 
 @router.get("/get_bookings_for_rooms_not_rated_by_user")
-async def get_bookings_for_rooms_not_rated_by_user(current_user: get_current_user, service: booking_service, unit_of_work: UnitOfWorkDep):
+async def get_bookings_for_rooms_not_rated_by_user(
+    current_user: get_current_user, service: booking_service, unit_of_work: UnitOfWorkDep
+):
     return await service.get_bookings_for_rooms_not_rated_by_user(unit_of_work=unit_of_work, user_id=current_user.id)
-

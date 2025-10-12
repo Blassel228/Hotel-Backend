@@ -1,22 +1,20 @@
-import asyncio  # Added for async functionality
+import asyncio
 import os
 
 from app.enums.room_areas import RoomAreas
 from app.enums.room_types import RoomType
-from app.schemas.room import RoomBase  # No changes to imports
-from app.utils.unitofwork import UnitOfWork  # No changes to imports
+from app.schemas.room import RoomBase
+from app.utils.unitofwork import UnitOfWork
 
-# Instantiate ABCUnitOfWork instead of assigning the class itself
-unit_of_work = UnitOfWork()  # Changed: Create an instance of ABCUnitOfWork
+unit_of_work = UnitOfWork()
 
 
 def read_base64_from_file(file_path):
     """Reads a Base64 string from a .txt file."""
     with open(file_path, "r") as f:
-        return f.read().strip()  # Strip any extra whitespace or newlines
+        return f.read().strip()
 
 
-# Changed the function to be asynchronous and added comments for clarity
 async def populate_properties_with_images(folder_path):
     """Populates the Property table with data and Base64 images."""
     # Mock data for properties (unchanged)

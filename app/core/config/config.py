@@ -1,5 +1,6 @@
 from app.core.config.base import BaseConfig
 from app.core.config.db import DataBaseConfig
+from app.core.config.stripe import StripeConfig
 from app.enums import ExecutionMode
 
 
@@ -14,13 +15,7 @@ class Settings(BaseConfig):
     ALGORITHM: str
     SECRET: str
 
-    STRIPE_PUBLISHABLE_KEY: str
-    STRIPE_SECRET_KEY: str
-    STRIPE_SUCCESS_URL: str
-    STRIPE_CANCEL_URL: str
-    STRIPE_WEBHOOK_SECRET: str
-
-    ACCESS_TOKEN_EXPIRE_MINUTES: int
+    stripe: StripeConfig = StripeConfig()
 
     db: DataBaseConfig = DataBaseConfig()
 

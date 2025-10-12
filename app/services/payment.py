@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 
 class PaymentService:
     def __init__(self):
-        stripe.api_key = settings.STRIPE_SECRET_KEY
+        stripe.api_key = settings.stripe.STRIPE_SECRET_KEY
         if not stripe.api_key:
             raise ValueError("Stripe secret key is not configured")
 
@@ -54,8 +54,8 @@ class PaymentService:
                     }
                 ],
                 mode="payment",
-                success_url=settings.STRIPE_SUCCESS_URL + "?session_id={CHECKOUT_SESSION_ID}",
-                cancel_url=settings.STRIPE_CANCEL_URL,
+                success_url=settings.stripe.STRIPE_SUCCESS_URL + "?session_id={CHECKOUT_SESSION_ID}",
+                cancel_url=settings.stripe.STRIPE_CANCEL_URL,
                 metadata={
                     "user_id": str(user_id) if user_id else "",
                     "room_id": str(request.room_id),

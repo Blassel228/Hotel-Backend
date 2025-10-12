@@ -51,32 +51,18 @@ class RoomService:
             return await unit_of_work.room.delete(id=room_id)
 
     async def search(
-        self,
-        unit_of_work: UnitOfWork,
-        start_date: datetime,
-        end_date: datetime,
-        capacity: int = 1,
+            self,
+            unit_of_work: UnitOfWork,
+            start_date: datetime,
+            end_date: datetime,
+            capacity: int = 1,
     ) -> Sequence[Room]:
-        result = []
-
         async with unit_of_work:
-            rooms = await unit_of_work.room.get_by_capacity(capacity=capacity)
-
-        start_datetime = datetime.combine(start_date, datetime.min.time())
-        end_datetime = datetime.combine(end_date, datetime.max.time())
-
-        for room in rooms:
-            if not room.bookings:
-                result.append(room)
-            for booking in room.bookings:
-                if (booking.start_date <= start_datetime <= booking.end_date) or (
-                    booking.start_date <= end_datetime <= booking.end_date
-                ):
-                    continue
-                else:
-                    result.append(room)
-                    print(result)
-        return result
+            return await unit_of_work.room.get_available_in_period(
+                start_date=start_date,
+                end_date=end_date,
+                capacity=capacity
+            )
 
     async def get_rooms_booked_not_rated_by_user(self, unit_of_work: UnitOfWork, user_id: str):
         async with unit_of_work:

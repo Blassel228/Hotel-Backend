@@ -3,13 +3,13 @@ import secrets
 from datetime import timedelta, datetime, timezone
 from typing import Annotated
 
-from fastapi import Depends, HTTPException, status
-from fastapi.openapi.models import Response
+from fastapi import Depends, Response
 from fastapi.security import OAuth2PasswordRequestForm, OAuth2PasswordBearer
 from jose import jwt as jose_jwt, JWTError
 from passlib.context import CryptContext
 
 from app.core import settings
+from app.core.exc import AuthError
 from app.models import User
 from app.schemas.token import TokenResponse, RefreshTokenCreate
 from app.utils.unitofwork import UnitOfWork
@@ -21,44 +21,35 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
 class AuthService:
-    """
-    Service class for handling user authentication and token generation.
-    """
-
     async def get_current_user(self, token=Depends(oauth2_scheme), unit_of_work=Depends(UnitOfWork)):
-        """
-        Retrieve the current user based on the provided JWT token.
-        """
-        credentials_exception = HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Could not validate credentials",
-        )
-
         try:
             payload = jose_jwt.decode(token, settings.SECRET, algorithms=[settings.ALGORITHM])
-            id: str = payload.get("sub")
-            if id is None:
-                raise credentials_exception
+            user_id: str = payload.get("sub")
+            if user_id is None:
+                raise AuthError(
+                    error_code="CREDENTIALS_INVALID",
+                    detail="Could not validate credentials"
+                )
         except JWTError:
-            raise credentials_exception
+            raise AuthError(
+                error_code="CREDENTIALS_INVALID",
+                detail="Could not validate credentials"
+            )
 
         async with unit_of_work:
-            user: User = await unit_of_work.user.get_one(id=id)
+            user: User = await unit_of_work.user.get_one(id=user_id)
         if user is None:
-            raise credentials_exception
-
+            raise AuthError(
+                error_code="CREDENTIALS_INVALID",
+                detail="Could not validate credentials"
+            )
         return user
 
     async def authenticate_user(self, username: str, password: str, unit_of_work: UnitOfWork):
-        """
-        Verify the user's credentials against the database.
-        """
         async with unit_of_work:
             user = await unit_of_work.user.get_one_or_none(username=username)
-
         if not user or not pwd_context.verify(password, user.hashed_password):
             return False
-
         return user
 
     async def rotate_refresh_token(
@@ -70,17 +61,23 @@ class AuthService:
             )
 
         if not token_record:
-            raise HTTPException(status_code=401, detail="Invalid refresh token")
+            raise AuthError(
+                error_code="REFRESH_TOKEN_INVALID",
+                detail="Invalid or revoked refresh token"
+            )
 
-        if token_record.expires_at < datetime.now(timezone.utc).replace(tzinfo=None):
-            raise HTTPException(status_code=401, detail="Refresh token expired")
+        now = datetime.now(timezone.utc).replace(tzinfo=None)
+        if token_record.expires_at < now:
+            raise AuthError(
+                error_code="REFRESH_TOKEN_EXPIRED",
+                detail="Refresh token has expired"
+            )
 
         async with unit_of_work:
             await unit_of_work.refresh_token.update({"used": True, "revoked": True}, id=token_record.id)
 
             new_refresh_value = secrets.token_urlsafe(64)
             new_refresh_expires = timedelta(days=7)
-
             new_refresh_token = RefreshTokenCreate(
                 token=new_refresh_value,
                 user_id=token_record.user_id,
@@ -88,7 +85,6 @@ class AuthService:
                 revoked=False,
                 used=False,
             )
-
             await unit_of_work.refresh_token.create(new_refresh_token)
 
             access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
@@ -116,14 +112,11 @@ class AuthService:
     async def login_get_token(
         self, form_data: Annotated[OAuth2PasswordRequestForm, Depends()], unit_of_work: UnitOfWork, response: Response
     ):
-        """
-        Генерує access_token + refresh_token після успішного логіну.
-        """
         user = await self.authenticate_user(form_data.username, form_data.password, unit_of_work)
 
         if not user:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
+            raise AuthError(
+                error_code="INVALID_CREDENTIALS",
                 detail="Incorrect username or password",
                 headers={"WWW-Authenticate": "Bearer"},
             )
@@ -136,7 +129,6 @@ class AuthService:
 
         refresh_token_value = secrets.token_urlsafe(64)
         refresh_token_expires = timedelta(days=7)
-
         new_refresh_token = RefreshTokenCreate(
             token=refresh_token_value,
             user_id=user.id,
@@ -172,15 +164,10 @@ class AuthService:
 
     @staticmethod
     def create_access_token(data: dict, expires_delta: timedelta | None = None):
-        """
-        Create an access token with an expiration time.
-        """
         to_encode = data.copy()
         expire = datetime.utcnow() + expires_delta
         to_encode.update({"exp": expire})
-
-        encoded_jwt = jose_jwt.encode(to_encode, settings.SECRET, algorithm=settings.ALGORITHM)
-        return encoded_jwt
+        return jose_jwt.encode(to_encode, settings.SECRET, algorithm=settings.ALGORITHM)
 
 
 auth_service = AuthService()

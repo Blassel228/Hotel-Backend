@@ -1,8 +1,37 @@
+from app.enums import OrderDirection
+from app.enums.rating_filters import RatingFilters
 from app.schemas.rating import RatingCreate, RatingCreateIn, RatingAverageGet
 from app.utils.unitofwork import UnitOfWork
 
 
 class RatingService:
+    async def get_multi(
+        self,
+        unit_of_work: UnitOfWork,
+        offset: int = 0,
+        limit: int | None = None,
+        sort: RatingFilters = RatingFilters.BEST,
+    ):
+        async with unit_of_work:
+            match sort:
+                case RatingFilters.BEST:
+                    return await unit_of_work.rating.paged_list(offset=offset, limit=limit, order_by="stars")
+
+                case RatingFilters.WORST:
+                    return await unit_of_work.rating.paged_list(
+                        offset=offset, limit=limit, order_by="stars", order_direction=OrderDirection.ASC
+                    )
+
+                case RatingFilters.RECENT:
+                    return await unit_of_work.rating.paged_list(
+                        offset=offset, limit=limit, order_direction=OrderDirection.ASC
+                    )
+
+                case RatingFilters.OLDEST:
+                    return await unit_of_work.rating.paged_list(
+                        offset=offset, limit=limit, order_direction=OrderDirection.DESC
+                    )
+
     async def create(self, unit_of_work: UnitOfWork, rating: RatingCreateIn, user_id: str):
         rating = RatingCreate(**rating.model_dump(), user_id=user_id)
         async with unit_of_work:

@@ -1,9 +1,10 @@
-from app.models.rating import Rating
-from app.repository.base import SQLAlchemyRepository
 from sqlalchemy import select, func
 
+from app.models.rating import Rating
+from app.repository.base import SQLAlchemyRepository, PaginateRepositoryMixin
 
-class RatingRepository(SQLAlchemyRepository):
+
+class RatingRepository(SQLAlchemyRepository, PaginateRepositoryMixin):
     model = Rating
 
     async def get_average_rating(self, room_id):

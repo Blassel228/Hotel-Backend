@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
-@router.post("/stripe_webhook")
+@router.post("/stripe-webhook")
 async def stripe_webhook(
     request: Request,
     service: payment_service,
@@ -24,7 +24,7 @@ async def stripe_webhook(
     sig_header = request.headers.get("stripe-signature")
 
     try:
-        event = stripe.Webhook.construct_event(payload, sig_header, settings.STRIPE_WEBHOOK_SECRET)
+        event = stripe.Webhook.construct_event(payload, sig_header, settings.stripe.STRIPE_WEBHOOK_SECRET)
     except ValueError:
         logger.error("Invalid payload")
         raise HTTPException(status_code=400, detail="Invalid payload")

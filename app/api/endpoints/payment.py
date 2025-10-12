@@ -33,6 +33,6 @@ async def create_checkout_session_without_token(
     return {"url": url}
 
 
-@router.post("/refund_booking")
+@router.post("/refund")
 async def refund_booking(unit_of_work: UnitOfWorkDep, request: CreateRefundRequest, service: payment_service):
     return await service.refund_booking(unit_of_work=unit_of_work, request=request)

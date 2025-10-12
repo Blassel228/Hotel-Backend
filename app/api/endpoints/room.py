@@ -4,12 +4,12 @@ from datetime import date
 from fastapi import APIRouter, Depends, Form, File, UploadFile
 
 from app.api.dependencies import room_service, UnitOfWorkDep, get_current_user
-from app.schemas.room import RoomFilterParams, RoomUpdate, RoomCreateIn, RoomUpdateIn
+from app.schemas.room import RoomFilterParams, RoomCreateIn, RoomUpdateIn
 
 router = APIRouter()
 
 
-@router.get("")
+@router.get("/")
 async def get(service: room_service, unit_of_work: UnitOfWorkDep, offset: int = 0, limit: int = None):
     return await service.get_all(unit_of_work, offset, limit)
 
@@ -29,7 +29,7 @@ async def search(unit_of_work: UnitOfWorkDep, start_date: date, end_date: date, 
     return await service.search(unit_of_work=unit_of_work, start_date=start_date, end_date=end_date, capacity=capacity)
 
 
-@router.get("/get_one/{room_id}")
+@router.get("/{room_id}")
 async def get_one(room_id: str, unit_of_work: UnitOfWorkDep, service: room_service):
     return await service.get_one(room_id=room_id, unit_of_work=unit_of_work)
 
@@ -44,8 +44,8 @@ async def update(room_id: str, unit_of_work: UnitOfWorkDep, service: room_servic
     return await service.delete(room_id=room_id, unit_of_work=unit_of_work)
 
 
-@router.get("/get_with_filters")
-async def get_with_filters(
+@router.get("/filter", summary="Get rooms using filter parameters")
+async def get_filtered_rooms(
     unit_of_work: UnitOfWorkDep,
     service: room_service,
     filters: RoomFilterParams = Depends(),
@@ -53,8 +53,10 @@ async def get_with_filters(
     return await service.get_with_filters(unit_of_work=unit_of_work, filters=filters)
 
 
-@router.get("/get_rooms_booked_not_rated_by_user")
-async def get_rooms_booked_not_rated_by_user(
-    unit_of_work: UnitOfWorkDep, service: room_service, current_user: get_current_user
+@router.get("/not-rated", summary="Get rooms booked but not rated by the user")
+async def get_not_rated_rooms(
+    unit_of_work: UnitOfWorkDep,
+    service: room_service,
+    current_user: get_current_user,
 ):
     return await service.get_rooms_booked_not_rated_by_user(unit_of_work=unit_of_work, user_id=current_user.id)

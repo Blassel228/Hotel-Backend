@@ -21,7 +21,7 @@ async def login(
     return await auth_service.login_get_token(form_data=form_data, response=response, unit_of_work=unit_of_work)
 
 
-@router.get("/user/me/", summary="Get Current User by Access Token")
+@router.get("/user/me", summary="Get Current User by Access Token")
 async def get_current_user_(
     service: auth_service_dep,
     unit_of_work: UnitOfWorkDep,
@@ -36,7 +36,7 @@ async def get_current_user_(
     )
 
 
-@router.post("/user/credentials/", response_model=UserGet, summary="Get User by Username and Password")
+@router.post("/user/credentials", response_model=UserGet, summary="Get User by Username and Password")
 async def get_user_by_credentials(
     service: auth_service_dep,
     unit_of_work: UnitOfWorkDep,

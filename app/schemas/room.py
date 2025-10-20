@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Optional
 
 from pydantic import BaseModel, Field
@@ -20,6 +21,13 @@ class RoomBase(BaseModel):
     total_space: float = Field(..., description="Room size")
     capacity: int = Field(..., description="Number of people for the room")
     image: bytes = Field(None, description="Binary image data (LargeBinary)")
+    average_rating: float = Field(..., description="Average rating of a room")
+    created_at: datetime = Field(..., description="Date of creation")
+
+
+class RoomRead(RoomBase):
+    class Config:
+        from_attributes = True
 
 
 class RoomFilters(BaseModel):

@@ -9,6 +9,10 @@ class UserService:
         async with unit_of_work:
             return await unit_of_work.user.get_multi()
 
+    async def get_one(self, unit_of_work: UnitOfWork, user_id: str):
+        async with unit_of_work:
+            return await unit_of_work.user.get_one(id=user_id)
+
     async def create(self, data: UserCreate, unit_of_work: UnitOfWork) -> UserGet:
         async with unit_of_work:
             user = await unit_of_work.user.get_one_or_none(username=data.username)

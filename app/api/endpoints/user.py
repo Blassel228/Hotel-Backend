@@ -24,3 +24,8 @@ async def update(
 @router.get("/")
 async def get_multi(service: user_service, unit_of_work: UnitOfWorkDep):
     return await service.get_multi(unit_of_work)
+
+
+@router.get("/{user_id}")
+async def get_one(service: user_service, unit_of_work: UnitOfWorkDep, user_id: str):
+    return await service.get_one(unit_of_work=unit_of_work, user_id=user_id)

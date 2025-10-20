@@ -4,8 +4,8 @@ from sqlalchemy.orm import relationship
 from .base import Base, CreatedAtModel, UUIDModel
 
 
-class Rating(Base, CreatedAtModel, UUIDModel):
-    __tablename__ = "rating"
+class Review(Base, CreatedAtModel, UUIDModel):
+    __tablename__ = "review"
 
     stars = Column(
         Float,
@@ -26,9 +26,10 @@ class Rating(Base, CreatedAtModel, UUIDModel):
     user_id = Column(UUID(as_uuid=True), ForeignKey("user.id"), nullable=True)
     room_id = Column(UUID(as_uuid=True), ForeignKey("room.id"), nullable=False)
 
-    room = relationship("Room", back_populates="ratings")
+    room = relationship("Room", back_populates="reviews")
 
     __table_args__ = (
+        CheckConstraint("stars >= 1 AND stars <= 10", name="check_stars_range"),
         CheckConstraint("staff_rate >= 1 AND staff_rate <= 4", name="check_staff_rate_range"),
         CheckConstraint("cleanliness_rate >= 1 AND cleanliness_rate <= 4", name="check_cleanliness_rate_range"),
     )

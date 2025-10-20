@@ -14,6 +14,7 @@ class Settings(BaseConfig):
 
     ALGORITHM: str
     SECRET: str
+    ACCESS_TOKEN_EXPIRE_MINUTES: int
 
     stripe: StripeConfig = StripeConfig()
 

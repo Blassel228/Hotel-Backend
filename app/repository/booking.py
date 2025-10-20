@@ -1,6 +1,6 @@
 from sqlalchemy import Sequence, exists, select
 
-from app.models import Booking, Rating
+from app.models import Booking, Review
 from app.repository.base import SQLAlchemyRepository
 
 
@@ -13,7 +13,7 @@ class BookingRepository(SQLAlchemyRepository):
         """
         Get bookings of the given user for rooms that the user has NOT rated yet.
         """
-        rating_exists = exists().where(Rating.user_id == user_id, Rating.room_id == self.model.room_id)
+        rating_exists = exists().where(Review.user_id == user_id, Review.room_id == self.model.room_id)
 
         statement = select(self.model).where(self.model.user_id == user_id, ~rating_exists).distinct()
 

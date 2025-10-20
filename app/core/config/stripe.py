@@ -7,5 +7,3 @@ class StripeConfig(BaseConfig):
     STRIPE_SUCCESS_URL: str
     STRIPE_CANCEL_URL: str
     STRIPE_WEBHOOK_SECRET: str
-
-    ACCESS_TOKEN_EXPIRE_MINUTES: int

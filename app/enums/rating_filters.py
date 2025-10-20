@@ -6,5 +6,3 @@ class RatingFilters(Enum):
     OLDEST = "oldest"
     BEST = "best"
     WORST = "worst"
-
-

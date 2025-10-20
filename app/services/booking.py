@@ -11,7 +11,6 @@ class BookingService:
         async with unit_of_work:
             return await unit_of_work.booking.get_one(id=booking_id)
 
-
     async def cancel_booking(self, id: str, unit_of_work: UnitOfWork, current_user_id: int | None = None):
         async with unit_of_work:
             booking = await unit_of_work.booking.get_one(id=id)

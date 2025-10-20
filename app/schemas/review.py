@@ -4,12 +4,12 @@ from uuid import UUID
 from pydantic import BaseModel
 
 
-class RatingAverageGet(BaseModel):
+class ReviewAverageGet(BaseModel):
     room_id: UUID
     stars: float
 
 
-class RatingCreate(BaseModel):
+class ReviewCreate(BaseModel):
     user_id: UUID
     room_id: UUID
     stars: float
@@ -21,7 +21,7 @@ class RatingCreate(BaseModel):
     cleanliness_rate: int
 
 
-class RatingCreateIn(BaseModel):
+class ReviewCreateIn(BaseModel):
     room_id: UUID
     stars: float
     recommended_for_friends: bool

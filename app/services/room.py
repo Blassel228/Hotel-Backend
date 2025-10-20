@@ -24,7 +24,6 @@ class RoomService:
 
     async def get_with_filters(self, unit_of_work: UnitOfWork, filters: RoomFilterParams):
         filter_dict = {k: v for k, v in filters.__dict__.items() if v is not None}
-        print(filter_dict)
         lowest_price = filter_dict.pop("lowest_price", 0)
         greatest_price = filter_dict.pop("greatest_price", None)
         async with unit_of_work:
@@ -51,17 +50,15 @@ class RoomService:
             return await unit_of_work.room.delete(id=room_id)
 
     async def search(
-            self,
-            unit_of_work: UnitOfWork,
-            start_date: datetime,
-            end_date: datetime,
-            capacity: int = 1,
+        self,
+        unit_of_work: UnitOfWork,
+        start_date: datetime,
+        end_date: datetime,
+        capacity: int = 1,
     ) -> Sequence[Room]:
         async with unit_of_work:
             return await unit_of_work.room.get_available_in_period(
-                start_date=start_date,
-                end_date=end_date,
-                capacity=capacity
+                start_date=start_date, end_date=end_date, capacity=capacity
             )
 
     async def get_rooms_booked_not_rated_by_user(self, unit_of_work: UnitOfWork, user_id: str):

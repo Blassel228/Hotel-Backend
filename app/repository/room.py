@@ -4,7 +4,7 @@ from typing import Sequence
 from sqlalchemy import select, and_, not_, exists
 
 from app.enums.booking_status import BookingStatus
-from app.models import Rating
+from app.models import Review
 from app.models import Room, Booking
 from app.repository.base import SQLAlchemyRepository
 
@@ -17,7 +17,7 @@ class RoomRepository(SQLAlchemyRepository):
         return await self.execute(statement=statement, action=lambda result: result.scalars().all())
 
     async def get_rooms_booked_not_rated_by_user(self, user_id: str) -> Sequence[Room]:
-        rating_exists = exists().where(Rating.user_id == user_id, Rating.room_id == Room.id)
+        rating_exists = exists().where(Review.user_id == user_id, Review.room_id == Room.id)
 
         statement = (
             select(Room)
@@ -45,13 +45,7 @@ class RoomRepository(SQLAlchemyRepository):
             )
         )
 
-        statement = (
-            select(Room)
-            .where(
-                Room.capacity >= capacity,
-                not_(overlapping_booking)
-            )
-        )
+        statement = select(Room).where(Room.capacity >= capacity, not_(overlapping_booking))
 
         statement = self.add_loading_options(statement)
 

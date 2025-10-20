@@ -26,23 +26,14 @@ class AuthService:
             payload = jose_jwt.decode(token, settings.SECRET, algorithms=[settings.ALGORITHM])
             user_id: str = payload.get("sub")
             if user_id is None:
-                raise AuthError(
-                    error_code="CREDENTIALS_INVALID",
-                    detail="Could not validate credentials"
-                )
+                raise AuthError(error_code="CREDENTIALS_INVALID", detail="Could not validate credentials")
         except JWTError:
-            raise AuthError(
-                error_code="CREDENTIALS_INVALID",
-                detail="Could not validate credentials"
-            )
+            raise AuthError(error_code="CREDENTIALS_INVALID", detail="Could not validate credentials")
 
         async with unit_of_work:
             user: User = await unit_of_work.user.get_one(id=user_id)
         if user is None:
-            raise AuthError(
-                error_code="CREDENTIALS_INVALID",
-                detail="Could not validate credentials"
-            )
+            raise AuthError(error_code="CREDENTIALS_INVALID", detail="Could not validate credentials")
         return user
 
     async def authenticate_user(self, username: str, password: str, unit_of_work: UnitOfWork):
@@ -61,17 +52,11 @@ class AuthService:
             )
 
         if not token_record:
-            raise AuthError(
-                error_code="REFRESH_TOKEN_INVALID",
-                detail="Invalid or revoked refresh token"
-            )
+            raise AuthError(error_code="REFRESH_TOKEN_INVALID", detail="Invalid or revoked refresh token")
 
         now = datetime.now(timezone.utc).replace(tzinfo=None)
         if token_record.expires_at < now:
-            raise AuthError(
-                error_code="REFRESH_TOKEN_EXPIRED",
-                detail="Refresh token has expired"
-            )
+            raise AuthError(error_code="REFRESH_TOKEN_EXPIRED", detail="Refresh token has expired")
 
         async with unit_of_work:
             await unit_of_work.refresh_token.update({"used": True, "revoked": True}, id=token_record.id)

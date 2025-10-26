@@ -5,6 +5,11 @@ from app.api.dependencies import booking_service, UnitOfWorkDep, get_current_use
 router = APIRouter()
 
 
+@router.get("/")
+async def get_all(unit_of_work: UnitOfWorkDep, service: booking_service):
+    return await service.get_all(unit_of_work=unit_of_work)
+
+
 @router.put("/{booking_id}/cancel", summary="Cancel a booking by ID")
 async def cancel_booking(booking_id: str, unit_of_work: UnitOfWorkDep, service: booking_service):
     return await service.cancel_booking(unit_of_work=unit_of_work, id=booking_id)

@@ -70,3 +70,10 @@ class ImageService:
                 )
             await unit_of_work.image.update(image_update.model_dump(), id=user.image_id)
             return await unit_of_work.image.get_one(id=user.image_id)
+
+    async def delete(self, user_id: str, unit_of_work: UnitOfWork):
+        async with unit_of_work:
+            user = await unit_of_work.user.get_one(id=user_id)
+            await unit_of_work.user.update({"image_id": None}, id=user_id)
+            return await unit_of_work.image.get_one(id=user.image_id)
+

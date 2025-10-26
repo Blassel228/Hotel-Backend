@@ -36,9 +36,11 @@ class AuthService:
             raise AuthError(error_code="CREDENTIALS_INVALID", detail="Could not validate credentials")
         return user
 
-    async def authenticate_user(self, username: str, password: str, unit_of_work: UnitOfWork):
+    async def authenticate_user(self, username_or_email: str, password: str, unit_of_work: UnitOfWork):
         async with unit_of_work:
-            user = await unit_of_work.user.get_one_or_none(username=username)
+            user_by_username = await unit_of_work.user.get_one_or_none(username=username_or_email)
+            user_by_email = await unit_of_work.user.get_one_or_none(email=username_or_email)
+            user = user_by_username or user_by_email
         if not user or not pwd_context.verify(password, user.hashed_password):
             return False
         return user

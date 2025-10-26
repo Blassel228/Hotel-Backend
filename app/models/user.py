@@ -21,7 +21,9 @@ class User(Base, CreatedAtModel, UUIDModel):
     is_admin = Column(Boolean, default=False, nullable=False)
     birthdate = Column(DateTime, nullable=True)
     image_id = Column(UUID, ForeignKey("image.id"), nullable=True)
+    # image_url_id = Column(UUID(as_uuid=True), ForeignKey("image_url.id"), nullable=True)
 
+    # image_url = relationship("ImageUrl", back_populates="user")
     image = relationship("Image", back_populates="user", uselist=False)
     bookings = relationship("Booking", back_populates="user")
 

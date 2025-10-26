@@ -12,10 +12,7 @@ router = APIRouter()
 
 @router.post("/", summary="Create a new room")
 async def create(
-    unit_of_work: UnitOfWorkDep,
-    service: room_service,
-    room: str = Form(...),
-    image: UploadFile = File(...)
+    unit_of_work: UnitOfWorkDep, service: room_service, room: str = Form(...), image: UploadFile = File(...)
 ):
     room_dict = json.loads(room)
     room = RoomCreateIn(**room_dict)

@@ -23,11 +23,22 @@ class UserGet(BaseModel):
     surname: str
 
 
-class UserUpdate(BaseModel):
+class UserGetPartial(BaseModel):
     name: Optional[str] = None
     surname: Optional[str] = None
     username: Optional[str] = None
     email: Optional[EmailStr] = None
+    phone_number: Optional[str] = None
+    country: Optional[str] = None
+    sex: Optional[int] = None
+    birthdate: Optional[datetime] = None
+
+
+class UserUpdate(BaseModel):
+    name: Optional[str] = None
+    surname: Optional[str] = None
+    username: Optional[str] = None
+    email: Optional[str] = None
     phone_number: Optional[str] = None
     country: Optional[str] = None
     sex: Optional[int] = None

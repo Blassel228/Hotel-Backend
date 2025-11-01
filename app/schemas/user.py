@@ -7,7 +7,6 @@ from pydantic import BaseModel, EmailStr
 class UserCreate(BaseModel):
     username: str
     password: str
-    country: str
     email: EmailStr
     phone_number: str
     name: str
@@ -16,7 +15,6 @@ class UserCreate(BaseModel):
 
 class UserGet(BaseModel):
     username: str
-    country: str
     email: EmailStr
     phone_number: str
     name: str

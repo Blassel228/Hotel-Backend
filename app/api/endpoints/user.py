@@ -39,6 +39,7 @@ async def delete(
 ):
     return await service.delete(unit_of_work=unit_of_work, user_id=user_id)
 
+
 @router.put("/{user_id}")
 async def update(user_id: str, service: user_service, unit_of_work: UnitOfWorkDep, user: UserUpdate):
     return await service.update(user_id=user_id, unit_of_work=unit_of_work, user=user)

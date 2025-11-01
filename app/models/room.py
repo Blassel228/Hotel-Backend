@@ -7,10 +7,7 @@ from .base import Base, CreatedAtModel, UUIDModel
 class Room(Base, CreatedAtModel, UUIDModel):
     __tablename__ = "room"
 
-    image = Column(
-        LargeBinary(length=2**24),
-        nullable=False,
-    )
+    image = Column(LargeBinary(length=2**24), nullable=False)
     type = Column(String, nullable=False)
     price = Column(Integer, nullable=False)
     beds = Column(Integer, nullable=False)
@@ -23,10 +20,10 @@ class Room(Base, CreatedAtModel, UUIDModel):
     total_space = Column(Float, nullable=False)
     has_sauna = Column(Boolean, nullable=False)
     has_jacuzzi = Column(Boolean, nullable=False)
-    average_rating = Column(Float, nullable=True, default=0.0)
+    average_rating = Column(Float, nullable=True)
 
-    bookings = relationship("Booking", back_populates="room", lazy="selectin")
-    reviews = relationship("Review", back_populates="room")
+    bookings = relationship("Booking", back_populates="room", cascade="all, delete-orphan")
+    reviews = relationship("Review", back_populates="room", cascade="all, delete-orphan")
 
     def __repr__(self):
         return f"<Room(id={self.id}, type={self.type}, area={self.area})>"

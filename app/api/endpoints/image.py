@@ -23,6 +23,7 @@ async def update(
 async def update(service: image_service, unit_of_work: UnitOfWorkDep, current_user: get_current_user):
     return await service.get_one(unit_of_work=unit_of_work, user_id=current_user.id)
 
+
 @router.delete("/")
 async def delete(service: image_service, unit_of_work: UnitOfWorkDep, current_user: get_current_user):
     return await service.delete(unit_of_work=unit_of_work, user_id=current_user.id)

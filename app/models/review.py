@@ -1,4 +1,5 @@
-from sqlalchemy import Column, Float, UUID, ForeignKey, Boolean, String, Integer, CheckConstraint
+from sqlalchemy import Column, Float, ForeignKey, Boolean, String, Integer, CheckConstraint
+from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 
 from .base import Base, CreatedAtModel, UUIDModel
@@ -7,25 +8,17 @@ from .base import Base, CreatedAtModel, UUIDModel
 class Review(Base, CreatedAtModel, UUIDModel):
     __tablename__ = "review"
 
-    stars = Column(
-        Float,
-        nullable=False,
-    )
-    staff_rate = Column(
-        Integer,
-        nullable=False,
-    )
-    cleanliness_rate = Column(
-        Integer,
-        nullable=False,
-    )
+    stars = Column(Float, nullable=False)
+    staff_rate = Column(Integer, nullable=False)
+    cleanliness_rate = Column(Integer, nullable=False)
     title = Column(String, nullable=True)
     recommended_for_friends = Column(Boolean, nullable=False)
     stay_again = Column(Boolean, nullable=False)
     experience_comment = Column(String, nullable=True)
-    user_id = Column(UUID(as_uuid=True), ForeignKey("user.id"), nullable=True)
-    room_id = Column(UUID(as_uuid=True), ForeignKey("room.id"), nullable=False)
+    user_id = Column(UUID(as_uuid=True), ForeignKey("user.id", ondelete="CASCADE"), nullable=True)
+    room_id = Column(UUID(as_uuid=True), ForeignKey("room.id", ondelete="CASCADE"), nullable=False)
 
+    user = relationship("User", back_populates="reviews")
     room = relationship("Room", back_populates="reviews")
 
     __table_args__ = (

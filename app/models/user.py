@@ -16,16 +16,17 @@ class User(Base, CreatedAtModel, UUIDModel):
     name = Column(String, nullable=True)
     surname = Column(String, nullable=True)
     phone_number = Column(String, nullable=True, unique=True)
-    country = Column(String, nullable=False)
+    country = Column(String, nullable=True)
     sex = Column(Integer, SQLEnum(UserSex, name="user_sex"), default=UserSex.NOT_KNOWN.value, nullable=False)
     is_admin = Column(Boolean, default=False, nullable=False)
     birthdate = Column(DateTime, nullable=True)
-    image_id = Column(UUID, ForeignKey("image.id"), nullable=True)
-    # image_url_id = Column(UUID(as_uuid=True), ForeignKey("image_url.id"), nullable=True)
+    image_id = Column(UUID, ForeignKey("image.id", ondelete="CASCADE"), nullable=True)
 
-    # image_url = relationship("ImageUrl", back_populates="user")
-    image = relationship("Image", back_populates="user", uselist=False)
-    bookings = relationship("Booking", back_populates="user")
+    image = relationship("Image", back_populates="user", uselist=False, cascade="delete")
+    bookings = relationship("Booking", back_populates="user", cascade="all, delete-orphan")
+    reviews = relationship("Review", back_populates="user", cascade="all, delete-orphan")
+    refresh_tokens = relationship("RefreshToken", cascade="all, delete-orphan")
+    refunds = relationship("Refund", cascade="all, delete-orphan")
 
     def __repr__(self):
         return f"<User(id={self.id}, username={self.username}, email={self.email})>"

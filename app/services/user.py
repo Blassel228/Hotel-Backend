@@ -1,4 +1,10 @@
-from pydantic import ValidationError, validate_email
+from uuid import UUID
+
+import phonenumbers
+from fastapi import HTTPException
+from phonenumbers import NumberParseException
+from pydantic import validate_email
+from pydantic_core import PydanticCustomError
 
 from app.core.exc.user import ExistingValueException
 from app.schemas.user import UserCreate, UserGet, UserUpdate, UserGetPartial
@@ -10,7 +16,6 @@ class UserService:
     async def get_multi(self, unit_of_work: UnitOfWork):
         async with unit_of_work:
             return await unit_of_work.user.get_multi()
-
 
     async def get_one(self, unit_of_work: UnitOfWork, user_id: str):
         async with unit_of_work:
@@ -42,28 +47,39 @@ class UserService:
         user_data.pop("hashed_password", None)
         return UserGet(**user_data)
 
+    async def update(self, user: UserUpdate, user_id, unit_of_work: UnitOfWork) -> UserGetPartial:
+        if isinstance(user_id, UUID):
+            normalized_user_id = user_id
+        else:
+            normalized_user_id = UUID(str(user_id))
 
-    async def update(self, user: UserUpdate, user_id: str, unit_of_work: UnitOfWork) -> UserGetPartial:
         async with unit_of_work:
             if user.username:
                 existing = await unit_of_work.user.get_one_or_none(username=user.username)
-                if existing and existing.id != user_id:
-                    raise ExistingValueException(detail={"username": "Username is already taken"})
+                if existing and existing.id != normalized_user_id:
+                    raise HTTPException(status_code=409, detail="Username is already taken")
 
             if user.email:
                 try:
                     validate_email(user.email)
-                except ValidationError:
-                    raise ExistingValueException(detail={"email": "Invalid email format"})
+                except PydanticCustomError:
+                    raise HTTPException(status_code=409, detail="Invalid email format")
 
                 existing = await unit_of_work.user.get_one_or_none(email=user.email)
-                if existing and existing.id != user_id:
-                    raise ExistingValueException(detail={"email": "Email is already registered"})
+                if existing and existing.id != normalized_user_id:
+                    raise HTTPException(status_code=409, detail="Email is already registered")
 
             if user.phone_number:
+                try:
+                    parsed_number = phonenumbers.parse(user.phone_number, None)
+                    if not phonenumbers.is_valid_number(parsed_number):
+                        raise ValueError()
+                except (NumberParseException, ValueError):
+                    raise HTTPException(status_code=422, detail="Invalid phone number format")
+
                 existing = await unit_of_work.user.get_one_or_none(phone_number=user.phone_number)
-                if existing and existing.id != user_id:
-                    raise ExistingValueException(detail={"phone_number": "Phone number is already registered"})
+                if existing and existing.id != normalized_user_id:
+                    raise HTTPException(status_code=409, detail="Phone number is already registered")
 
         update_data = user.model_dump(exclude_none=True)
 
@@ -71,6 +87,10 @@ class UserService:
             update_data["hashed_password"] = pwd_context.hash(update_data.pop("password"))
 
         async with unit_of_work:
-            await unit_of_work.user.update(update_data, id=user_id)
-            return await unit_of_work.user.get_one(id=user_id)
+            await unit_of_work.user.update(update_data, id=normalized_user_id)
+            return await unit_of_work.user.get_one(id=normalized_user_id)
 
+    async def delete(self, user_id: str, unit_of_work: UnitOfWork):
+        async with unit_of_work:
+            await unit_of_work.user.delete(id=user_id)
+            return await unit_of_work.user.get_one(id=user_id)

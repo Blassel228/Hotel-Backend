@@ -10,4 +10,4 @@ class Image(Base, CreatedAtModel, UUIDModel):
     file_name = Column(String, nullable=False)
     image_data = Column(LargeBinary, nullable=True)
 
-    user = relationship("User", back_populates="image", uselist=False)
+    user = relationship("User", back_populates="image")

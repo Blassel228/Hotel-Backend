@@ -57,7 +57,6 @@ async def get_user_by_credentials(
         name=user.name,
         surname=user.surname,
         phone_number=user.phone_number,
-        money_balance=user.money_balance,
     )
 
 

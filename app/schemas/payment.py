@@ -16,6 +16,12 @@ class CreateCheckoutSessionRequest(BaseModel):
     guest_data: Optional[GuestCreateIn] = None
 
 
-class CreateRefundRequest(BaseModel):
+class CreateRefundRequestByUser(BaseModel):
     booking_id: str
     refund_reason: str
+
+
+class CreateRefundRequestByAdmin(BaseModel):
+    booking_id: str
+    refund_reason: str
+    amount: float = Field(gt=0, description="Refund amount in major currency units (e.g., USD)")

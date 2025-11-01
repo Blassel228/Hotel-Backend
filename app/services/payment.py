@@ -10,7 +10,7 @@ from app.core.exc.payment import PaymentProviderException, PaymentVerificationFa
 from app.enums.booking_status import BookingStatus
 from app.schemas.booking import CreateBooking
 from app.schemas.guest import GuestCreate
-from app.schemas.payment import CreateCheckoutSessionRequest, CreateRefundRequest
+from app.schemas.payment import CreateCheckoutSessionRequest, CreateRefundRequestByUser, CreateRefundRequestByAdmin
 from app.utils.unitofwork import UnitOfWork
 
 logger = logging.getLogger(__name__)
@@ -157,43 +157,117 @@ class PaymentService:
             "message": "Booking created after successful payment",
         }
 
-    async def refund_booking(self, unit_of_work: UnitOfWork, request: CreateRefundRequest) -> dict:
+    async def refund_booking_by_user(
+        self,
+        unit_of_work: UnitOfWork,
+        request: CreateRefundRequestByUser,
+    ) -> dict:
         async with unit_of_work:
             booking = await unit_of_work.booking.get_one(id=request.booking_id)
-
             if not booking.intent_id:
                 raise PaymentVerificationFailed(detail="No payment intent associated with this booking")
 
-        refund_amount = self.calculate_refund_amount(booking)
+        refund_amount_in_cents = self.calculate_refund_amount(booking)
 
         try:
             stripe_refund = stripe.Refund.create(
                 payment_intent=booking.intent_id,
-                amount=refund_amount,
+                amount=refund_amount_in_cents,
                 reason="requested_by_customer",
+                metadata={"refund_reason": request.refund_reason, "initiated_by": "user"},
             )
 
-            logger.info(
-                f"Refund {stripe_refund.id} initiated for booking {request.booking_id}, intent {booking.intent_id}"
-            )
+            logger.info(f"User-initiated refund {stripe_refund.id} for booking {request.booking_id}")
+
+            refund_amount_in_big_units = self.convert_from_minor_units(refund_amount_in_cents)
+
+            async with unit_of_work:
+                await unit_of_work.refund.create(
+                    {
+                        "booking_id": booking.id,
+                        "stripe_refund_id": stripe_refund.id,
+                        "refund_amount": refund_amount_in_big_units,
+                        "refund_reason": request.refund_reason,
+                        "user_id": booking.user_id,
+                    }
+                )
+                await unit_of_work.booking.update({"status": BookingStatus.REFUNDED.value}, id=booking.id)
 
         except stripe.StripeError as e:
             logger.error(f"Stripe refund failed for booking {request.booking_id}: {str(e)}")
             raise PaymentProviderException(detail=f"Refund failed: {str(e)}")
 
         return {
-            "status": "initiated",
+            "status": "success",
             "refund_id": stripe_refund.id,
-            "amount_refunded": stripe_refund.amount / 100.0,
+            "refund_amount": refund_amount_in_big_units,
             "currency": stripe_refund.currency,
             "booking_id": request.booking_id,
-            "refund_reason": request.refund_reason,
-            "message": "Refund initiated. Waiting for webhook confirmation.",
+            "message": "Refund processed according to cancellation policy",
+        }
+
+    async def refund_booking_by_admin(
+        self,
+        unit_of_work: UnitOfWork,
+        request: CreateRefundRequestByAdmin,
+    ) -> dict:
+        async with unit_of_work:
+            booking = await unit_of_work.booking.get_one(id=request.booking_id)
+            if not booking.intent_id:
+                raise PaymentVerificationFailed(detail="No payment intent associated with this booking")
+
+            if request.amount > booking.price:
+                raise ValueError("Refund amount cannot exceed the original booking price")
+
+        refund_amount_in_cents = int(round(self.convert_to_minor_units(request.amount)))
+
+        try:
+            stripe_refund = stripe.Refund.create(
+                payment_intent=booking.intent_id,
+                amount=refund_amount_in_cents,
+                metadata={
+                    "initiated_by": "admin",
+                    "requested_amount": str(request.amount),
+                },
+            )
+
+            logger.info(
+                f"Admin-initiated refund {stripe_refund.id} for booking {request.booking_id}, "
+                f"amount: {request.amount} {stripe_refund.currency}"
+            )
+
+            async with unit_of_work:
+                await unit_of_work.refund.create(
+                    {
+                        "booking_id": booking.id,
+                        "stripe_refund_id": stripe_refund.id,
+                        "refund_amount": request.amount,
+                        "refund_reason": request.refund_reason,
+                        "user_id": booking.user_id,
+                    }
+                )
+                await unit_of_work.booking.update({"status": BookingStatus.REFUNDED.value}, id=booking.id)
+
+        except stripe.StripeError as e:
+            logger.error(f"Stripe refund failed for booking {request.booking_id}: {str(e)}")
+            raise PaymentProviderException(detail=f"Refund failed: {str(e)}")
+
+        return {
+            "status": "success",
+            "refund_id": stripe_refund.id,
+            "refund_amount": request.amount,
+            "currency": stripe_refund.currency,
+            "booking_id": request.booking_id,
+            "message": "Admin refund processed successfully",
         }
 
     @staticmethod
     def convert_to_minor_units(amount: float) -> float:
         return amount * 100
+
+    @staticmethod
+    def convert_from_minor_units(amount: float) -> float:
+        return amount / 100
 
     @staticmethod
     def calculate_refund_amount(booking) -> float:

@@ -1,7 +1,7 @@
 from app.core.exc.booking import PermissionDeniedException, BookingConflictException
 from app.enums.booking_status import BookingStatus
 from app.models import Booking
-from app.schemas.booking import CreateBooking, CreateBookingIn
+from app.schemas.booking import CreateBooking, CreateBookingIn, UpdateBooking
 from app.schemas.guest import GuestCreateIn, GuestCreate
 from app.utils.unitofwork import UnitOfWork
 
@@ -14,6 +14,20 @@ class BookingService:
     async def get_all(self, unit_of_work: UnitOfWork):
         async with unit_of_work:
             return await unit_of_work.booking.get_multi()
+
+    async def update(self, booking_id: str, booking: UpdateBooking, unit_of_work: UnitOfWork):
+        if booking.start_date.tzinfo is not None:
+            booking.start_date = booking.start_date.replace(tzinfo=None)
+        if booking.end_date.tzinfo is not None:
+            booking.end_date = booking.end_date.replace(tzinfo=None)
+
+        async with unit_of_work:
+            await unit_of_work.booking.update(booking.model_dump(), id=booking_id)
+            return await unit_of_work.booking.get_one(id=booking_id)
+
+    async def delete(self, booking_id: str, unit_of_work: UnitOfWork):
+        async with unit_of_work:
+            return await unit_of_work.booking.delete(id=booking_id)
 
     async def cancel_booking(self, id: str, unit_of_work: UnitOfWork, current_user_id: int | None = None):
         async with unit_of_work:

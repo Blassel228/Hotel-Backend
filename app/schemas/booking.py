@@ -38,3 +38,13 @@ class CreateBooking(BaseModel):
         if isinstance(value, str):
             value = datetime.fromisoformat(value)
         return value.replace(tzinfo=None)
+
+
+class UpdateBooking(BaseModel):
+    user_id: Optional[UUID] = None
+    guest_id: Optional[UUID] = None
+    room_id: Optional[UUID] = None
+    price: Optional[float] = None
+    status: Optional[str] = BookingStatus.CONFIRMED.value
+    start_date: Optional[datetime] = None
+    end_date: Optional[datetime] = None

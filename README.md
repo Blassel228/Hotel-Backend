@@ -29,14 +29,11 @@ Basic security is implemented: **hashed passwords**, **JWT authentication**, and
 ## Endpoints
 
 ### Booking
-GET /booking/get_bookings_for_one_user # Get bookings for the logged-in user
-GET /booking/get_one/{booking_id} # Get a single booking by ID
-GET /booking/get_bookings_for_rooms_not_rated_by_user # Get rooms not yet rated by the user
-PUT /booking/cancel_booking/{id} # Cancel a booking
-POST /booking/refund_booking # Refund a booking
-
-shell
-Копіювати код
+GET /booking/get_bookings_for_one_user # Get bookings for the logged-in user.
+GET /booking/get_one/{booking_id} # Get a single booking by ID.
+GET /booking/get_bookings_for_rooms_not_rated_by_user # Get rooms not yet rated by the user.
+PUT /booking/cancel_booking/{id} # Cancel a booking.
+POST /booking/refund_booking # Refund a booking.
 
 ### Room
 GET /room # Get all rooms (with optional pagination)
@@ -47,24 +44,15 @@ DELETE /room/{room_id} # Delete a room
 GET /room/get_with_filters # Get rooms filtered by specific parameters
 GET /room/get_rooms_booked_not_rated_by_user # Get rooms booked by the user that are not rated
 
-shell
-Копіювати код
-
 ### Rating
 POST /rating # Create a rating for a room
 GET /rating/get_average_rating/room/{room_id} # Get the average rating for a room
 GET /rating/get_average_ratings # Get average ratings for all rooms
 
-shell
-Копіювати код
-
 ### Image
 POST /image/ # Upload an image for a user
 PUT /image/ # Update a user image
 GET /image/ # Get the image of the logged-in user
-
-yaml
-Копіювати код
 
 ---
 
@@ -83,28 +71,16 @@ Clone the repository:
 git clone <repo_url>
 cd hotel-backend
 
-csharp
-Копіювати код
-
 Create a `.env` file with required variables:
 DATABASE_URL=postgresql://user:password@localhost:5432/db_name
 SECRET_KEY=<your_secret_key>
 STRIPE_SECRET_KEY=<stripe_test_secret>
 
-arduino
-Копіювати код
-
 Build and run the database (Docker Compose recommended):
 docker-compose up -d
 
-yaml
-Копіювати код
-
 Install dependencies:
 pip install -r requirements.txt
-
-yaml
-Копіювати код
 
 ---
 
@@ -115,8 +91,6 @@ The project uses **Alembic** to manage database schema migrations.
 After configuring the database and environment variables, apply all existing migrations by running:
 alembic upgrade head
 
-yaml
-Копіювати код
 This command must be executed before running the application for the first time to ensure all database tables and schema changes are applied.
 
 ---
@@ -126,14 +100,10 @@ This command must be executed before running the application for the first time 
 Start the FastAPI server using Uvicorn:
 uvicorn app.main:app --reload
 
-arduino
-Копіювати код
 
 Interactive API docs will be available at:
 http://127.0.0.1:8000/docs
 
-yaml
-Копіювати код
 
 ---
 
@@ -144,9 +114,6 @@ Webhook processing is mandatory because redirect URLs alone are not a reliable s
 
 ### Webhook Endpoint
 POST http://localhost:8000/stripe-webhook
-
-markdown
-Копіювати код
 
 This endpoint is responsible for:
 
@@ -166,21 +133,14 @@ Follow the official installation instructions for your OS:
 Verify installation:
 stripe --version
 
-markdown
-Копіювати код
-
 2. **Log in to Stripe via CLI**
 stripe login
 
-pgsql
-Копіювати код
 This command opens a browser window to authenticate your Stripe account.
 
 3. **Start the Webhook Listener**
 stripe listen --forward-to localhost:8000/stripe-webhook
 
-markdown
-Копіювати код
 ✔ This command:  
 - Listens for Stripe events in test mode  
 - Forwards them to your local FastAPI backend  
@@ -189,14 +149,9 @@ markdown
 Example output:
 Your webhook signing secret is whsec_XXXXXXXXXXXXXXXX
 
-markdown
-Копіювати код
-
 4. **Set the Webhook Secret in .env**
 STRIPE_WEBHOOK_SECRET=whsec_XXXXXXXXXXXXXXXX
 
-sql
-Копіювати код
 ⚠️ The application will reject webhook events if this value is missing or incorrect.
 
 ### Events Handled by the Application
@@ -228,8 +183,6 @@ Redirect URLs are used only for UX, not for payment validation:
 STRIPE_SUCCESS_URL=http://localhost:8000/payment/success
 STRIPE_CANCEL_URL=http://localhost:8000/payment/cancel
 
-vbnet
-Копіювати код
 ⚠️ The backend does not rely on redirect URLs to confirm payment status.
 
 ---
@@ -257,8 +210,6 @@ This avoids the need to manually create rooms or upload images through the API d
 The script can be run manually from the console:
 python populate_rooms.py
 
-csharp
-Копіювати код
 (Exact filename may vary depending on where you place it.)  
 
 It uses `asyncio.run()` and therefore **must not be executed inside an already running event loop**.
@@ -290,9 +241,6 @@ If an image file is missing, that room is skipped and not inserted.
 Example file content:
 iVBORw0KGgoAAAANSUhEUgAA...
 
-mathematica
-Копіювати код
-
 ### Image Naming Convention (Required)
 
 Image filenames must exactly match the names referenced in the script.
@@ -307,18 +255,12 @@ Image filenames must exactly match the names referenced in the script.
 If the script contains:
 "image": "image4.txt"
 
-arduino
-Копіювати код
 Then the following file **must exist** in the image folder:
 image4.txt
 
-lua
-Копіювати код
 Otherwise, the script will output:
 File NOT found: image4.txt
 
-csharp
-Копіювати код
 and skip that room.
 
 ### Image Folder Location
@@ -326,8 +268,6 @@ and skip that room.
 The folder path is defined explicitly in the script:
 folder_path = "C:\Users\User\Desktop\hotel-rooms"
 
-markdown
-Копіювати код
 You may change this path as needed, but:
 
 - All image `.txt` files must be inside this directory  

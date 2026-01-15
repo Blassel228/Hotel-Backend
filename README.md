@@ -29,30 +29,30 @@ Basic security is implemented: **hashed passwords**, **JWT authentication**, and
 ## Endpoints
 
 ### Booking
-GET /booking/get_bookings_for_one_user # Get bookings for the logged-in user.
-GET /booking/get_one/{booking_id} # Get a single booking by ID.
-GET /booking/get_bookings_for_rooms_not_rated_by_user # Get rooms not yet rated by the user.
-PUT /booking/cancel_booking/{id} # Cancel a booking.
-POST /booking/refund_booking # Refund a booking.
+GET /booking/get_bookings_for_one_user # Get bookings for the logged-in user.  
+GET /booking/get_one/{booking_id} # Get a single booking by ID.  
+GET /booking/get_bookings_for_rooms_not_rated_by_user # Get rooms not yet rated by the user.  
+PUT /booking/cancel_booking/{id} # Cancel a booking.  
+POST /booking/refund_booking # Refund a booking.  
 
 ### Room
-GET /room # Get all rooms (with optional pagination)
-GET /room/search/{start_date}/{end_date}/{capacity} # Search rooms by date and capacity
-GET /room/get_one/{room_id} # Get details for one room
-PUT /room/{room_id} # Update a room
-DELETE /room/{room_id} # Delete a room
-GET /room/get_with_filters # Get rooms filtered by specific parameters
-GET /room/get_rooms_booked_not_rated_by_user # Get rooms booked by the user that are not rated
+GET /room # Get all rooms (with optional pagination)  
+GET /room/search/{start_date}/{end_date}/{capacity} # Search rooms by date and capacity  
+GET /room/get_one/{room_id} # Get details for one room  
+PUT /room/{room_id} # Update a room  
+DELETE /room/{room_id} # Delete a room  
+GET /room/get_with_filters # Get rooms filtered by specific parameters    
+GET /room/get_rooms_booked_not_rated_by_user # Get rooms booked by the user that are not rated  
 
 ### Rating
-POST /rating # Create a rating for a room
-GET /rating/get_average_rating/room/{room_id} # Get the average rating for a room
-GET /rating/get_average_ratings # Get average ratings for all rooms
+POST /rating # Create a rating for a room  
+GET /rating/get_average_rating/room/{room_id} # Get the average rating for a room  
+GET /rating/get_average_ratings # Get average ratings for all rooms  
 
 ### Image
-POST /image/ # Upload an image for a user
-PUT /image/ # Update a user image
-GET /image/ # Get the image of the logged-in user
+POST /image/ # Upload an image for a user  
+PUT /image/ # Update a user image  
+GET /image/ # Get the image of the logged-in user  
 
 ---
 

@@ -379,7 +379,8 @@ async def populate_properties_with_images(folder_path):
 
 
 async def main():
-    folder_path = "C:\\Users\\User\\Desktop\\hotel-rooms"  #
+    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+    folder_path = os.path.join(BASE_DIR, "hotel-rooms")
     await populate_properties_with_images(folder_path)
 
 

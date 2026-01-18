@@ -20,7 +20,6 @@ class Room(Base, CreatedAtModel, UUIDModel):
     total_space = Column(Float, nullable=False)
     has_sauna = Column(Boolean, nullable=False)
     has_jacuzzi = Column(Boolean, nullable=False)
-    average_rating = Column(Float, nullable=True)
 
     bookings = relationship("Booking", back_populates="room", cascade="all, delete-orphan")
     reviews = relationship("Review", back_populates="room", cascade="all, delete-orphan")

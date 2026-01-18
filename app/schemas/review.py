@@ -5,8 +5,7 @@ from pydantic import BaseModel
 
 
 class ReviewAverageGet(BaseModel):
-    room_id: UUID
-    stars: float
+    average_rating: float | None
 
 
 class ReviewCreate(BaseModel):

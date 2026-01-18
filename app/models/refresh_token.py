@@ -8,9 +8,9 @@ from .base import Base, CreatedAtModel, UUIDModel
 class RefreshToken(Base, CreatedAtModel, UUIDModel):
     __tablename__ = "refresh_token"
 
-    token = Column(String(512), unique=True, nullable=False, index=True)
+    token_hash = Column(String(512), unique=True, nullable=False, index=True)
     user_id = Column(UUID(as_uuid=True), ForeignKey("user.id", ondelete="CASCADE"), nullable=False, index=True)
-    expires_at = Column(DateTime, nullable=False)
+    expires_at = Column(DateTime(timezone=True), nullable=False)
     revoked = Column(Boolean, default=False, nullable=False)
     used = Column(Boolean, default=False, nullable=False)
 

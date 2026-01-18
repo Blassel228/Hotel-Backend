@@ -21,7 +21,7 @@ class TokenRefreshRequest(BaseModel):
 
 
 class RefreshTokenCreate(BaseModel):
-    token: str
+    token_hash: str
     user_id: UUID
     expires_at: datetime
     revoked: bool

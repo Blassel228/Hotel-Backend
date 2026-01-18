@@ -1,3 +1,4 @@
+import hashlib
 import logging
 import secrets
 from datetime import timedelta, datetime, timezone
@@ -18,6 +19,10 @@ logger = logging.getLogger(__name__)
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/auth/token/login/", auto_error=False)
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+
+def hash_refresh_token(token: str) -> str:
+    return hashlib.sha256(token.encode()).hexdigest()
 
 
 class AuthService:
@@ -46,29 +51,40 @@ class AuthService:
         return user
 
     async def rotate_refresh_token(
-        self, unit_of_work: UnitOfWork, refresh_token_str: str, response: Response
+            self, unit_of_work: UnitOfWork, refresh_token_str: str, response: Response
     ) -> TokenResponse:
+        if not refresh_token_str:
+            raise AuthError(error_code="REFRESH_TOKEN_MISSING", detail="Refresh token is required")
+
+        hashed_token = hash_refresh_token(refresh_token_str)
+        now = datetime.now(timezone.utc)
+
         async with unit_of_work:
-            token_record = await unit_of_work.refresh_token.get_one_or_none(
-                token=refresh_token_str, revoked=False, used=False
+            consumed = await unit_of_work.refresh_token.consume_token(
+                token_hash=hashed_token,
+                expires_after=now,
             )
 
-        if not token_record:
-            raise AuthError(error_code="REFRESH_TOKEN_INVALID", detail="Invalid or revoked refresh token")
+            if not consumed:
+                raise AuthError(
+                    error_code="REFRESH_TOKEN_INVALID",
+                    detail="Invalid, expired, or already used refresh token"
+                )
 
-        now = datetime.now(timezone.utc).replace(tzinfo=None)
-        if token_record.expires_at < now:
-            raise AuthError(error_code="REFRESH_TOKEN_EXPIRED", detail="Refresh token has expired")
-
-        async with unit_of_work:
-            await unit_of_work.refresh_token.update({"used": True, "revoked": True}, id=token_record.id)
+            token_record = await unit_of_work.refresh_token.get_one_or_none(token_hash=hashed_token)
+            if not token_record:
+                raise AuthError(
+                    error_code="REFRESH_TOKEN_INVALID",
+                    detail="Token record missing after successful consumption"
+                )
 
             new_refresh_value = secrets.token_urlsafe(64)
-            new_refresh_expires = timedelta(days=7)
+            new_refresh_expires = timedelta(seconds=30)
+
             new_refresh_token = RefreshTokenCreate(
-                token=new_refresh_value,
+                token_hash=hash_refresh_token(new_refresh_value),
                 user_id=token_record.user_id,
-                expires_at=(datetime.now(timezone.utc) + new_refresh_expires).replace(tzinfo=None),
+                expires_at=datetime.now(timezone.utc) + new_refresh_expires,
                 revoked=False,
                 used=False,
             )
@@ -108,18 +124,18 @@ class AuthService:
                 headers={"WWW-Authenticate": "Bearer"},
             )
 
-        access_token_expires = timedelta(minutes=15)
+        access_token_expires = timedelta(seconds=15)
         access_token = self.create_access_token(
             data={"sub": str(user.id), "email": user.email, "username": user.username},
             expires_delta=access_token_expires,
         )
 
         refresh_token_value = secrets.token_urlsafe(64)
-        refresh_token_expires = timedelta(days=7)
+        refresh_token_expires = timedelta(seconds=30)
         new_refresh_token = RefreshTokenCreate(
-            token=refresh_token_value,
+            token_hash=hash_refresh_token(refresh_token_value),
             user_id=user.id,
-            expires_at=(datetime.now(timezone.utc) + refresh_token_expires).replace(tzinfo=None),
+            expires_at=datetime.now(timezone.utc) + refresh_token_expires,
             revoked=False,
             used=False,
         )
@@ -152,8 +168,8 @@ class AuthService:
     @staticmethod
     def create_access_token(data: dict, expires_delta: timedelta | None = None):
         to_encode = data.copy()
-        expire = datetime.utcnow() + expires_delta
-        to_encode.update({"exp": expire})
+        expire_timestamp = int((datetime.now(timezone.utc) + expires_delta).timestamp())
+        to_encode.update({"exp": expire_timestamp})
         return jose_jwt.encode(to_encode, settings.SECRET, algorithm=settings.ALGORITHM)
 
 

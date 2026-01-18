@@ -45,11 +45,11 @@ class ReviewRepository(SQLAlchemyRepository[Review], PaginateRepositoryMixin[Rev
         result = await self.session.execute(statement)
         return list(result.unique().scalars().all())
 
-    async def get_average_rating(self, room_id: str) -> float:
+    async def get_average_rating(self, room_id: str) -> float | None:
         stmt = select(func.avg(self.model.stars)).where(self.model.room_id == room_id)
         result = await self.session.execute(stmt)
         avg = result.scalar()
-        return float(avg) if avg is not None else 0.0
+        return float(avg) if avg is not None else None
 
     async def get_average_ratings(self) -> list[dict[str, Any]]:
         stmt = select(self.model.room_id, func.avg(self.model.stars).label("stars")).group_by(self.model.room_id)

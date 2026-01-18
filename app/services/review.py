@@ -55,14 +55,12 @@ class ReviewService:
         rating = ReviewCreate(**rating.model_dump(), user_id=user_id)
         async with unit_of_work:
             updated_rating = await unit_of_work.review.create(rating)
-            average_rating = round(await unit_of_work.review.get_average_rating(room_id=rating.room_id), 1)
-            await unit_of_work.room.update({"average_rating": average_rating}, id=rating.room_id)
             return updated_rating
 
     async def get_average_rating(self, unit_of_work: UnitOfWork, room_id: str):
         async with unit_of_work:
-            stars = await unit_of_work.review.get_average_rating(room_id=room_id)
-            return ReviewAverageGet(room_id=room_id, stars=stars)
+            average_rating = await unit_of_work.review.get_average_rating(room_id=room_id)
+            return ReviewAverageGet(average_rating=average_rating)
 
     async def get_average_ratings(self, unit_of_work: UnitOfWork):
         async with unit_of_work:

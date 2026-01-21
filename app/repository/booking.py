@@ -11,11 +11,14 @@ class BookingRepository(SQLAlchemyRepository):
 
     async def get_bookings_for_rooms_not_rated_by_user(self, user_id: str) -> Sequence[Booking]:
         """
-        Get bookings of the given user for rooms that the user has NOT rated yet.
+        Get bookings of the given user that do NOT have a review yet.
         """
-        rating_exists = exists().where(Review.user_id == user_id, Review.room_id == self.model.room_id)
+        rating_exists = exists().where(Review.booking_id == Booking.id)
 
-        statement = select(self.model).where(self.model.user_id == user_id, ~rating_exists).distinct()
+        statement = select(Booking).where(
+            Booking.user_id == user_id,
+            ~rating_exists
+        ).distinct()
 
         statement = self.add_loading_options(statement)
         return await self.execute(statement=statement, action=lambda result: result.unique().scalars().all())

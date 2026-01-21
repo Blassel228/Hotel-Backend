@@ -11,6 +11,7 @@ class ReviewAverageGet(BaseModel):
 class ReviewCreate(BaseModel):
     user_id: UUID
     room_id: UUID
+    booking_id: UUID
     stars: float
     recommended_for_friends: bool
     stay_again: bool
@@ -21,6 +22,7 @@ class ReviewCreate(BaseModel):
 
 
 class ReviewCreateIn(BaseModel):
+    booking_id: UUID
     room_id: UUID
     stars: float
     recommended_for_friends: bool

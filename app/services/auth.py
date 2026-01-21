@@ -1,3 +1,4 @@
+import hashlib
 import logging
 import secrets
 from datetime import timedelta, datetime, timezone
@@ -18,6 +19,16 @@ logger = logging.getLogger(__name__)
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/auth/token/login/", auto_error=False)
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+
+def hash_refresh_token(token: str) -> str:
+    return hashlib.sha256(token.encode()).hexdigest()
+
+
+def ensure_utc_aware(dt: datetime) -> datetime:
+    if dt.tzinfo is None:
+        return dt.replace(tzinfo=timezone.utc)
+    return dt
 
 
 class AuthService:
@@ -46,29 +57,37 @@ class AuthService:
         return user
 
     async def rotate_refresh_token(
-        self, unit_of_work: UnitOfWork, refresh_token_str: str, response: Response
+            self, unit_of_work: UnitOfWork, refresh_token_str: str, response: Response
     ) -> TokenResponse:
+        hashed_token = hash_refresh_token(refresh_token_str)
+
         async with unit_of_work:
             token_record = await unit_of_work.refresh_token.get_one_or_none(
-                token=refresh_token_str, revoked=False, used=False
+                token=hashed_token, revoked=False, used=False
             )
 
         if not token_record:
             raise AuthError(error_code="REFRESH_TOKEN_INVALID", detail="Invalid or revoked refresh token")
 
-        now = datetime.now(timezone.utc).replace(tzinfo=None)
-        if token_record.expires_at < now:
+        now = datetime.now(timezone.utc)
+        expires_at = ensure_utc_aware(token_record.expires_at)
+
+        print(f"Now: {now}")
+        print(f"Token expires at: {expires_at}")
+
+        if expires_at < now:
             raise AuthError(error_code="REFRESH_TOKEN_EXPIRED", detail="Refresh token has expired")
 
         async with unit_of_work:
             await unit_of_work.refresh_token.update({"used": True, "revoked": True}, id=token_record.id)
 
             new_refresh_value = secrets.token_urlsafe(64)
-            new_refresh_expires = timedelta(days=7)
+            new_refresh_hashed = hash_refresh_token(new_refresh_value)
+            new_refresh_expires = timedelta(minutes=45)
             new_refresh_token = RefreshTokenCreate(
-                token=new_refresh_value,
+                token=new_refresh_hashed,
                 user_id=token_record.user_id,
-                expires_at=(datetime.now(timezone.utc) + new_refresh_expires).replace(tzinfo=None),
+                expires_at=datetime.now(timezone.utc) + new_refresh_expires,
                 revoked=False,
                 used=False,
             )
@@ -97,7 +116,8 @@ class AuthService:
         )
 
     async def login_get_token(
-        self, form_data: Annotated[OAuth2PasswordRequestForm, Depends()], unit_of_work: UnitOfWork, response: Response
+            self, form_data: Annotated[OAuth2PasswordRequestForm, Depends()], unit_of_work: UnitOfWork,
+            response: Response
     ):
         user = await self.authenticate_user(form_data.username, form_data.password, unit_of_work)
 
@@ -108,22 +128,23 @@ class AuthService:
                 headers={"WWW-Authenticate": "Bearer"},
             )
 
-        access_token_expires = timedelta(minutes=15)
+        access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
         access_token = self.create_access_token(
             data={"sub": str(user.id), "email": user.email, "username": user.username},
             expires_delta=access_token_expires,
         )
 
         refresh_token_value = secrets.token_urlsafe(64)
-        refresh_token_expires = timedelta(days=7)
+        refresh_token_hashed = hash_refresh_token(refresh_token_value)
+        refresh_token_expires = timedelta(seconds=45)
         new_refresh_token = RefreshTokenCreate(
-            token=refresh_token_value,
+            token=refresh_token_hashed,
             user_id=user.id,
-            expires_at=(datetime.now(timezone.utc) + refresh_token_expires).replace(tzinfo=None),
+            expires_at=datetime.now(timezone.utc) + refresh_token_expires,
             revoked=False,
             used=False,
         )
-
+        print(f"Creating refresh token with expires_at: {new_refresh_token.expires_at}")
         async with unit_of_work:
             await unit_of_work.refresh_token.create(new_refresh_token)
 
@@ -152,8 +173,9 @@ class AuthService:
     @staticmethod
     def create_access_token(data: dict, expires_delta: timedelta | None = None):
         to_encode = data.copy()
-        expire = datetime.utcnow() + expires_delta
-        to_encode.update({"exp": expire})
+        expire_utc = datetime.now(timezone.utc) + expires_delta
+        expire_timestamp = int(expire_utc.timestamp())
+        to_encode.update({"exp": expire_timestamp})
         return jose_jwt.encode(to_encode, settings.SECRET, algorithm=settings.ALGORITHM)
 
 

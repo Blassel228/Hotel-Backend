@@ -1,5 +1,6 @@
 from app.core.config.base import BaseConfig
 from app.core.config.db import DataBaseConfig
+from app.core.config.email_config import FastMailConfig
 from app.core.config.stripe import StripeConfig
 from app.enums import ExecutionMode
 
@@ -19,6 +20,8 @@ class Settings(BaseConfig):
     stripe: StripeConfig = StripeConfig()
 
     db: DataBaseConfig = DataBaseConfig()
+
+    fast_mail: FastMailConfig = FastMailConfig()
 
     @property
     def origins(self):

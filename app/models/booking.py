@@ -21,6 +21,7 @@ class Booking(Base, CreatedAtModel, UUIDModel):
     user = relationship("User", back_populates="bookings")
     room = relationship("Room", back_populates="bookings")
     guest = relationship("Guest", back_populates="bookings")
+    review = relationship("Review", back_populates="booking")
     refund = relationship("Refund", back_populates="booking", uselist=False, cascade="all, delete-orphan")
 
     __table_args__ = (CheckConstraint("user_id IS NOT NULL OR guest_id IS NOT NULL", name="chk_booking_user_or_guest"),)

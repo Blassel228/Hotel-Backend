@@ -19,6 +19,7 @@ class User(Base, CreatedAtModel, UUIDModel):
     country = Column(String, nullable=True)
     sex = Column(Integer, SQLEnum(UserSex, name="user_sex"), default=UserSex.NOT_KNOWN.value, nullable=False)
     is_admin = Column(Boolean, default=False, nullable=False)
+    is_verified = Column(Boolean, default=False)
     birthdate = Column(DateTime, nullable=True)
     image_id = Column(UUID, ForeignKey("image.id", ondelete="CASCADE"), nullable=True)
 
@@ -26,6 +27,7 @@ class User(Base, CreatedAtModel, UUIDModel):
     bookings = relationship("Booking", back_populates="user", cascade="all, delete-orphan")
     reviews = relationship("Review", back_populates="user", cascade="all, delete-orphan")
     refresh_tokens = relationship("RefreshToken", cascade="all, delete-orphan")
+    verification_tokens = relationship("VerificationToken", cascade="all, delete-orphan")
     refunds = relationship("Refund", cascade="all, delete-orphan")
 
     def __repr__(self):

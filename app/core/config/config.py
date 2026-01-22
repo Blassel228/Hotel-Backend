@@ -9,6 +9,7 @@ class Settings(BaseConfig):
     EXECUTION_MODE: ExecutionMode = ExecutionMode.TEST
     PROJECT_NAME: str = "hotel-backend"
     SERVER_HOST: str = "localhost"
+    FRONTEND_URL: str = "http://localhost:5173/"
     SERVER_PORT: int = 8000
     SERVER_CORS_ORIGINS: str = "*"
     DEBUG: bool = True

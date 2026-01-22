@@ -15,6 +15,7 @@ from app.repository.guest import GuestRepository
 from app.repository.image import ImageRepository
 from app.repository.room import RoomRepository
 from app.repository.user import UserRepository
+from app.repository.verefication_token import VerificationTokenRepository
 
 
 class ABCUnitOfWork(ABC):
@@ -28,6 +29,7 @@ class ABCUnitOfWork(ABC):
     refund: RefundRepository
     refresh_token: RefreshTokenRepository
     review: ReviewRepository
+    verification_token: VerificationTokenRepository
 
     @abstractmethod
     def __init__(self) -> None:
@@ -58,6 +60,7 @@ class UnitOfWork(ABCUnitOfWork):
         self.refund = RefundRepository(self.session)
         self.refresh_token = RefreshTokenRepository(self.session)
         self.review = ReviewRepository(self.session)
+        self.verification_token = VerificationTokenRepository(self.session)
 
         return self
 

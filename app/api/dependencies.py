@@ -6,6 +6,7 @@ from app.schemas.token import TokenData
 from app.services.auth import AuthService
 from app.services.auth import auth_service
 from app.services.booking import BookingService
+from app.services.email import EmailService
 from app.services.guest import GuestService
 from app.services.image import ImageService
 from app.services.payment import PaymentService
@@ -26,3 +27,4 @@ guest_service = Annotated[GuestService, Depends(GuestService)]
 image_service = Annotated[ImageService, Depends(ImageService)]
 payment_service = Annotated[PaymentService, Depends(PaymentService)]
 review_service = Annotated[ReviewService, Depends(ReviewService)]
+email_service = Annotated[EmailService, Depends(EmailService)]

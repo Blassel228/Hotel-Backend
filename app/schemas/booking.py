@@ -23,7 +23,6 @@ class CreateBookingIn(BaseModel):
 
 
 class CreateBooking(BaseModel):
-    guest_id: Optional[UUID] = None
     user_id: Optional[UUID] = None
     intent_id: str
     status: str = BookingStatus.CONFIRMED.value
@@ -42,7 +41,6 @@ class CreateBooking(BaseModel):
 
 class UpdateBooking(BaseModel):
     user_id: Optional[UUID] = None
-    guest_id: Optional[UUID] = None
     room_id: Optional[UUID] = None
     price: Optional[float] = None
     status: Optional[str] = BookingStatus.CONFIRMED.value

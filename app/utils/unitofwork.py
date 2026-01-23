@@ -11,7 +11,6 @@ from app.db.database import async_session
 from app.repository import RefreshTokenRepository, ReviewRepository
 from app.repository import RefundRepository
 from app.repository.booking import BookingRepository
-from app.repository.guest import GuestRepository
 from app.repository.image import ImageRepository
 from app.repository.room import RoomRepository
 from app.repository.user import UserRepository
@@ -23,7 +22,6 @@ class ABCUnitOfWork(ABC):
     user: UserRepository
     booking: BookingRepository
     room: RoomRepository
-    guest: GuestRepository
     image: ImageRepository
     refund: RefundRepository
     refresh_token: RefreshTokenRepository
@@ -53,7 +51,6 @@ class UnitOfWork(ABCUnitOfWork):
         self.user = UserRepository(self.session)
         self.booking = BookingRepository(self.session)
         self.room = RoomRepository(self.session)
-        self.guest = GuestRepository(self.session)
         self.image = ImageRepository(self.session)
         self.refund = RefundRepository(self.session)
         self.refresh_token = RefreshTokenRepository(self.session)

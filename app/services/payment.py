@@ -10,7 +10,6 @@ from app.core.exc.payment import PaymentProviderException, PaymentVerificationFa
 from app.enums.booking_status import BookingStatus
 from app.schemas.booking import CreateBooking
 from app.schemas.email import EmailIn
-from app.schemas.guest import GuestCreate
 from app.schemas.payment import CreateCheckoutSessionRequest, CreateRefundRequestByUser, CreateRefundRequestByAdmin
 from app.services.email import EmailService
 from app.utils.unitofwork import UnitOfWork
@@ -26,15 +25,13 @@ class PaymentService:
     async def create_checkout_session(
         self,
         unit_of_work: UnitOfWork,
-        user_id: Optional[str] = None,
-        request: CreateCheckoutSessionRequest = None,
+        user_id: str,
+        request: CreateCheckoutSessionRequest,
     ) -> str:
         async with unit_of_work:
             room = await unit_of_work.room.get_one(id=request.room_id)
-            customer_email = None
-            if user_id:
-                user = await unit_of_work.user.get_one(id=user_id)
-                customer_email = user.email
+            user = await unit_of_work.user.get_one(id=user_id)
+            customer_email = user.email
 
         price_in_minor_units = self.convert_to_minor_units(request.price)
 
@@ -65,7 +62,6 @@ class PaymentService:
                     "price": str(request.price),
                     "currency": request.currency,
                     "special_requests": request.special_requests or "",
-                    "guest_data": json.dumps(request.guest_data.model_dump()) if request.guest_data else "",
                 },
                 customer_email=customer_email,
             )
@@ -110,17 +106,6 @@ class PaymentService:
         except ValueError:
             raise PaymentVerificationFailed(detail="Invalid date format in metadata")
 
-        guest_id = None
-        if not metadata.get("user_id") and metadata.get("guest_data"):
-            try:
-                guest_data_dict = json.loads(metadata["guest_data"])
-                guest_create = GuestCreate(**guest_data_dict)
-                async with unit_of_work:
-                    guest = await unit_of_work.guest.create(guest_create)
-                    guest_id = guest.id
-            except Exception as e:
-                logger.error(f"Failed to create guest: {str(e)}")
-                raise PaymentVerificationFailed(detail="Failed to create guest record")
 
         booking_data = CreateBooking(
             intent_id=intent_id,
@@ -130,24 +115,14 @@ class PaymentService:
             end_date=end_date,
             status=BookingStatus.CONFIRMED.CONFIRMED,
             special_requests=metadata["special_requests"] or None,
-            user_id=metadata.get("user_id") or None,
-            guest_id=guest_id,
+            user_id=metadata.get("user_id")
         )
 
-        if metadata.get("user_id"):
-            if not metadata.get("guest_data"):
-                raise PaymentVerificationFailed(detail="Guest data is required for authenticated users")
-            try:
-                guest_data_dict = json.loads(metadata["guest_data"])
-                guest_create = GuestCreate(**guest_data_dict)
-                async with unit_of_work:
-                    guest = await unit_of_work.guest.create(guest_create)
-                    guest_id = guest.id
-                    booking_data.guest_id = guest_id
-                    booking_data.user_id = metadata["user_id"]
-            except Exception as e:
-                logger.error(f"Failed to create guest for authenticated user: {str(e)}")
-                raise PaymentVerificationFailed(detail="Failed to create guest record")
+        try:
+            booking_data.user_id = metadata["user_id"]
+        except Exception as e:
+            logger.error(f"Failed to create booking for user: {str(e)}")
+            raise PaymentVerificationFailed(detail="Failed to get user id")
 
         async with unit_of_work:
             booking = await unit_of_work.booking.create(booking_data.model_dump(exclude_unset=True))

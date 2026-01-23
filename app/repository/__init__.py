@@ -1,5 +1,4 @@
 from .booking import BookingRepository
-from .guest import GuestRepository
 from .image import ImageRepository
 from .review import ReviewRepository
 from .refresh_token import RefreshTokenRepository

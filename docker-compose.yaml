@@ -43,7 +43,17 @@ services:
     volumes:
       - .:/app
 
+  redis:
+    image: redis:7-alpine
+    container_name: app-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+
 volumes:
+  redis_data:
   db_data:
     name: ${DB_DATA_VOLUME_NAME}
   export_data:

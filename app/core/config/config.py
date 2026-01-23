@@ -10,6 +10,7 @@ class Settings(BaseConfig):
     PROJECT_NAME: str = "hotel-backend"
     SERVER_HOST: str = "localhost"
     FRONTEND_URL: str = "http://localhost:5173/"
+    REDIS_URL: str
     SERVER_PORT: int = 8000
     SERVER_CORS_ORIGINS: str = "*"
     DEBUG: bool = True

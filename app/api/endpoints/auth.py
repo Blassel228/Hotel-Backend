@@ -3,12 +3,24 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from fastapi.security import OAuth2PasswordRequestForm, HTTPBearer, HTTPAuthorizationCredentials
 
-from app.api.dependencies import auth_service_dep, UnitOfWorkDep, get_current_user
+from app.api.dependencies import auth_service_dep, UnitOfWorkDep, get_current_user, email_service as email_service_dep
 from app.schemas.token import TokenResponse
-from app.schemas.user import UserGet
+from app.schemas.user import UserGet, UserCreate
 
 security = HTTPBearer()
 router = APIRouter()
+
+
+@router.post("/register-pending", status_code=202)
+async def register_pending(user_in: UserCreate, unit_of_work: UnitOfWorkDep, service: auth_service_dep, email_service: email_service_dep):
+    await service.register_pending(user_in, email_service, unit_of_work)
+    return {"message": "Verification email sent. Please check your inbox."}
+
+
+@router.get("/verify-and-create")
+async def verify_and_create(token: str, unit_of_work: UnitOfWorkDep, service: auth_service_dep):
+    await service.verify_and_create_user(token, unit_of_work)
+    return {"message": "Account created successfully! You can now log in."}
 
 
 @router.post("/token/login", response_model=TokenResponse)

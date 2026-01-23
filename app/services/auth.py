@@ -1,18 +1,23 @@
 import hashlib
+import json
 import logging
 import secrets
 from datetime import timedelta, datetime, timezone
 from typing import Annotated
 
-from fastapi import Depends, Response
+from fastapi import Depends, Response, HTTPException
 from fastapi.security import OAuth2PasswordRequestForm, OAuth2PasswordBearer
 from jose import jwt as jose_jwt, JWTError
 from passlib.context import CryptContext
 
 from app.core import settings
 from app.core.exc import AuthError
+from app.core.exc.user import ExistingValueException
+from app.core.redis import redis_client
 from app.models import User
 from app.schemas.token import TokenResponse, RefreshTokenCreate
+from app.schemas.user import UserCreate
+from app.services.email import EmailService
 from app.utils.unitofwork import UnitOfWork
 
 logger = logging.getLogger(__name__)
@@ -32,6 +37,71 @@ def ensure_utc_aware(dt: datetime) -> datetime:
 
 
 class AuthService:
+    async def register_pending(self, user_data: UserCreate, email_service: EmailService, unit_of_work: UnitOfWork) -> None:
+        async with unit_of_work:
+            user = await unit_of_work.user.get_one_or_none(username=user_data.username)
+            if user:
+                raise ExistingValueException(detail={"username": "Username is already taken"})
+
+        async with unit_of_work:
+            user = await unit_of_work.user.get_one_or_none(phone_number=user_data.phone_number)
+            if user:
+                raise ExistingValueException(detail={"phone_number": "Phone number is already registered"})
+
+        async with unit_of_work:
+            user = await unit_of_work.user.get_one_or_none(email=user_data.email)
+            if user:
+                raise ExistingValueException(detail={"email": "Email is already registered"})
+
+        hashed_password = pwd_context.hash(user_data.password)
+
+        pending_data = {
+            "email": user_data.email,
+            "name": user_data.name,
+            "surname": user_data.surname,
+            "username": user_data.username,
+            "phone_number": user_data.phone_number,
+            "hashed_password": hashed_password,
+        }
+
+        token = secrets.token_urlsafe(32)
+
+        await redis_client.setex(
+            f"pending:{token}",
+            timedelta(minutes=15),
+            json.dumps(pending_data)
+        )
+
+        await email_service.send_verification_email_with_token(user_data.email, token)
+
+    async def verify_and_create_user(self, token: str, unit_of_work: UnitOfWork) -> None:
+
+        data_str = await redis_client.get(f"pending:{token}")
+        if not data_str:
+            raise HTTPException(status_code=400, detail="Invalid or expired verification link")
+
+        user_data = json.loads(data_str)
+
+        async with unit_of_work:
+            existing_username = await unit_of_work.user.get_one_or_none(username=user_data["username"])
+            if existing_username:
+                await redis_client.delete(f"pending:{token}")
+                raise HTTPException(status_code=400, detail="Username is already taken")
+
+            existing_phone = await unit_of_work.user.get_one_or_none(phone_number=user_data["phone_number"])
+            if existing_phone:
+                await redis_client.delete(f"pending:{token}")
+                raise HTTPException(status_code=400, detail="Phone number is already registered")
+
+            existing_email = await unit_of_work.user.get_one_or_none(email=user_data["email"])
+            if existing_email:
+                await redis_client.delete(f"pending:{token}")
+                raise HTTPException(status_code=400, detail="Email already registered")
+
+            await unit_of_work.user.create(user_data)
+
+        await redis_client.delete(f"pending:{token}")
+
     async def get_current_user(self, token=Depends(oauth2_scheme), unit_of_work=Depends(UnitOfWork)):
         try:
             payload = jose_jwt.decode(token, settings.SECRET, algorithms=[settings.ALGORITHM])

@@ -29,66 +29,21 @@ logger = logging.getLogger(__name__)
 
 
 class EmailService:
-    async def verify_token(self, token: str, unit_of_work: UnitOfWork):
-        async with unit_of_work:
-            verification_token = await unit_of_work.verification_token.get_one_or_none(token=token)
-
-            if not verification_token:
-                raise HTTPException(status_code=400, detail="Invalid verification token")
-
-            if verification_token.expires_at < datetime.now(timezone.utc):
-                await unit_of_work.verification_token.delete(id=verification_token.id)
-                raise HTTPException(status_code=400, detail="Verification token has expired")
-
-            if verification_token.used:
-                raise HTTPException(status_code=400, detail="Verification token already used")
-
-            await unit_of_work.verification_token.update(
-                {"used": True},
-                id=verification_token.id
-            )
-
-            await unit_of_work.user.update(
-                {"is_verified": True},
-                id=verification_token.user_id
-            )
-
-        return {"message": "Email verified successfully!"}
-
-    async def send_verification_email(self, user_id: str, unit_of_work: UnitOfWork):
-        async with unit_of_work:
-            user = await unit_of_work.user.get_one(id=user_id)
-
-        if user.is_verified:
-            return
-
-        verification_token = secrets.token_urlsafe(64)
-        expires_at = datetime.now(timezone.utc) + timedelta(minutes=15)
-
-        token_data = {
-            "token": verification_token,
-            "user_id": user_id,
-            "expires_at": expires_at,
-            "used": False
-        }
-
-        async with unit_of_work:
-            await unit_of_work.verification_token.create(token_data)
-
-        verification_link = f"{settings.FRONTEND_URL}/verify-email?token={verification_token}"
-
+    async def send_verification_email_with_token(self, email: str, token: str):
+        verification_link = f"{settings.FRONTEND_URL}/verify-email-test?token={token}"
         message = MessageSchema(
             subject="Підтвердіть ваш email",
-            recipients=[user.email],
+            recipients=[email],
             body=f"""
             <h2>Підтвердіть ваш email</h2>
-            <p>Натисніть кнопку нижче для підтвердження:</p>
-            <a href="{verification_link}">Підтвердити email</a>
+            <p>Натисніть кнопку нижче для завершення реєстрації:</p>
+            <a href="{verification_link}" style="display:inline-block; padding:10px 20px; background:#007bff; color:white; text-decoration:none; border-radius:5px;">
+                Підтвердити email
+            </a>
             <p>Посилання дійсне 15 хвилин.</p>
             """,
             subtype="html"
         )
-
         fm = FastMail(fast_mail_config)
         await fm.send_message(message)
 

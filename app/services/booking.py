@@ -43,9 +43,7 @@ class BookingService:
             await unit_of_work.booking.update({"status": BookingStatus.CANCELLED.value}, id=id)
             return await unit_of_work.booking.get_one(id=id)
 
-    async def create_with_token(
-        self, booking_in: CreateBookingIn, unit_of_work: UnitOfWork, user_id: int
-    ) -> Booking:
+    async def create_with_token(self, booking_in: CreateBookingIn, unit_of_work: UnitOfWork, user_id: int) -> Booking:
         async with unit_of_work:
             booking_data = CreateBooking(**booking_in.model_dump(), user_id=user_id)
             created_booking = await unit_of_work.booking.create(booking_data)

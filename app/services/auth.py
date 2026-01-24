@@ -9,6 +9,8 @@ from fastapi import Depends, Response, HTTPException
 from fastapi.security import OAuth2PasswordRequestForm, OAuth2PasswordBearer
 from jose import jwt as jose_jwt, JWTError
 from passlib.context import CryptContext
+from pydantic import validate_email
+from pydantic_core import PydanticCustomError
 
 from app.core import settings
 from app.core.exc import AuthError
@@ -37,7 +39,53 @@ def ensure_utc_aware(dt: datetime) -> datetime:
 
 
 class AuthService:
-    async def register_pending(self, user_data: UserCreate, email_service: EmailService, unit_of_work: UnitOfWork) -> None:
+    async def reset_password(
+        self,
+        token: str,
+        new_password: str,
+        unit_of_work: UnitOfWork,
+    ):
+        if len(new_password) < 6:
+            raise HTTPException(status_code=422, detail="Password must be at least 6 characters")
+
+        user_id = await redis_client.get(f"pwd_reset:{token}")
+        if not user_id:
+            raise HTTPException(400, "Invalid or expired reset link")
+
+        hashed_password = pwd_context.hash(new_password)
+
+        async with unit_of_work:
+            await unit_of_work.user.update({"hashed_password": hashed_password}, id=user_id)
+            await unit_of_work.refresh_token.revoke_all_for_user(user_id)
+
+        await redis_client.delete(f"pwd_reset:{token}")
+        return {"message": "Password updated successfully"}
+
+
+    async def forgot_password(
+        self,
+        email: str,
+        email_service: EmailService,
+        unit_of_work: UnitOfWork,
+    ):
+        try:
+            validate_email(email)
+        except PydanticCustomError:
+            raise HTTPException(status_code=422, detail="Invalid email format")
+
+        async with unit_of_work:
+            user = await unit_of_work.user.get_one_or_none(email=email)
+
+        if user:
+            token = secrets.token_urlsafe(32)
+            await redis_client.setex(f"pwd_reset:{token}", 900, str(user.id))
+            await email_service.send_password_reset_email(email, token)
+
+        return {"message": "If your email is registered, you'll receive a reset link"}
+
+    async def register_pending(
+        self, user_data: UserCreate, email_service: EmailService, unit_of_work: UnitOfWork
+    ) -> None:
         async with unit_of_work:
             user = await unit_of_work.user.get_one_or_none(username=user_data.username)
             if user:
@@ -66,16 +114,11 @@ class AuthService:
 
         token = secrets.token_urlsafe(32)
 
-        await redis_client.setex(
-            f"pending:{token}",
-            timedelta(minutes=15),
-            json.dumps(pending_data)
-        )
+        await redis_client.setex(f"pending:{token}", timedelta(minutes=15), json.dumps(pending_data))
 
         await email_service.send_verification_email_with_token(user_data.email, token)
 
     async def verify_and_create_user(self, token: str, unit_of_work: UnitOfWork) -> None:
-
         data_str = await redis_client.get(f"pending:{token}")
         if not data_str:
             raise HTTPException(status_code=400, detail="Invalid or expired verification link")
@@ -127,7 +170,7 @@ class AuthService:
         return user
 
     async def rotate_refresh_token(
-            self, unit_of_work: UnitOfWork, refresh_token_str: str, response: Response
+        self, unit_of_work: UnitOfWork, refresh_token_str: str, response: Response
     ) -> TokenResponse:
         hashed_token = hash_refresh_token(refresh_token_str)
 
@@ -186,8 +229,7 @@ class AuthService:
         )
 
     async def login_get_token(
-            self, form_data: Annotated[OAuth2PasswordRequestForm, Depends()], unit_of_work: UnitOfWork,
-            response: Response
+        self, form_data: Annotated[OAuth2PasswordRequestForm, Depends()], unit_of_work: UnitOfWork, response: Response
     ):
         user = await self.authenticate_user(form_data.username, form_data.password, unit_of_work)
 

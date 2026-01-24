@@ -10,6 +10,7 @@ class EmailIn(BaseModel):
     end_date: datetime
     price: float
 
+
 class ChangeEmailRequest(BaseModel):
     new_email: str
     password: str

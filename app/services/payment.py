@@ -16,6 +16,7 @@ from app.utils.unitofwork import UnitOfWork
 
 logger = logging.getLogger(__name__)
 
+
 class PaymentService:
     def __init__(self):
         stripe.api_key = settings.stripe.STRIPE_SECRET_KEY
@@ -75,9 +76,7 @@ class PaymentService:
 
     @staticmethod
     async def handle_successful_payment_and_create_booking(
-        unit_of_work: UnitOfWork,
-        session_id: str,
-        service: EmailService
+        unit_of_work: UnitOfWork, session_id: str, service: EmailService
     ) -> dict:
         try:
             session = stripe.checkout.Session.retrieve(session_id)
@@ -106,7 +105,6 @@ class PaymentService:
         except ValueError:
             raise PaymentVerificationFailed(detail="Invalid date format in metadata")
 
-
         booking_data = CreateBooking(
             intent_id=intent_id,
             room_id=metadata["room_id"],
@@ -115,7 +113,7 @@ class PaymentService:
             end_date=end_date,
             status=BookingStatus.CONFIRMED.CONFIRMED,
             special_requests=metadata["special_requests"] or None,
-            user_id=metadata.get("user_id")
+            user_id=metadata.get("user_id"),
         )
 
         try:
@@ -128,12 +126,7 @@ class PaymentService:
             booking = await unit_of_work.booking.create(booking_data.model_dump(exclude_unset=True))
 
         customer_email = session.get("customer_details", {}).get("email") or session.get("customer_email")
-        email_in = EmailIn(
-            id=str(booking.id),
-            start_date=start_date,
-            end_date=end_date,
-            price=float(metadata["price"])
-        )
+        email_in = EmailIn(id=str(booking.id), start_date=start_date, end_date=end_date, price=float(metadata["price"]))
 
         await service.send_booking_confirmation_email(customer_email, email_in)
 

@@ -4,6 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from fastapi.security import OAuth2PasswordRequestForm, HTTPBearer, HTTPAuthorizationCredentials
 
 from app.api.dependencies import auth_service_dep, UnitOfWorkDep, get_current_user, email_service as email_service_dep
+from app.schemas.auth import ForgotPasswordRequest, PasswordResetRequest
 from app.schemas.token import TokenResponse
 from app.schemas.user import UserGet, UserCreate
 
@@ -12,9 +13,34 @@ router = APIRouter()
 
 
 @router.post("/register-pending", status_code=202)
-async def register_pending(user_in: UserCreate, unit_of_work: UnitOfWorkDep, service: auth_service_dep, email_service: email_service_dep):
+async def register_pending(
+    user_in: UserCreate, unit_of_work: UnitOfWorkDep, service: auth_service_dep, email_service: email_service_dep
+):
     await service.register_pending(user_in, email_service, unit_of_work)
     return {"message": "Verification email sent. Please check your inbox."}
+
+
+@router.post("/forgot-password")
+async def forgot_password(
+    email: ForgotPasswordRequest,
+    auth_service: auth_service_dep,
+    email_service: email_service_dep,
+    unit_of_work: UnitOfWorkDep,
+):
+    return await auth_service.forgot_password(email.email, email_service, unit_of_work)
+
+
+@router.post("/reset-password")
+async def reset_password(
+    request: PasswordResetRequest,
+    auth_service: auth_service_dep,
+    unit_of_work: UnitOfWorkDep,
+):
+    return await auth_service.reset_password(
+        request.token,
+        request.new_password,
+        unit_of_work
+    )
 
 
 @router.get("/verify-and-create")

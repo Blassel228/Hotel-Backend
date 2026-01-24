@@ -21,11 +21,9 @@ class UserService:
         async with unit_of_work:
             return await unit_of_work.user.get_multi()
 
-
     async def get_one(self, unit_of_work: UnitOfWork, user_id: str):
         async with unit_of_work:
             return await unit_of_work.user.get_one(id=user_id)
-
 
     async def create(self, data: UserCreate, unit_of_work: UnitOfWork) -> UserGet:
         async with unit_of_work:
@@ -52,7 +50,6 @@ class UserService:
 
         user_data.pop("hashed_password", None)
         return UserGet(**user_data)
-
 
     async def update(self, user: UserUpdate, user_id, unit_of_work: UnitOfWork) -> UserGetPartial:
         if isinstance(user_id, UUID):
@@ -88,11 +85,11 @@ class UserService:
             return await unit_of_work.user.get_one(id=normalized_user_id)
 
     async def initiate_email_change(
-            self,
-            user_id: UUID,
-            new_email: str,
-            password: str,
-            unit_of_work: UnitOfWork,
+        self,
+        user_id: UUID,
+        new_email: str,
+        password: str,
+        unit_of_work: UnitOfWork,
     ) -> str:
         try:
             validate_email(new_email)
@@ -113,18 +110,10 @@ class UserService:
                 raise HTTPException(status_code=409, detail="Email is already registered")
 
         token = secrets.token_urlsafe(32)
-        await redis_client.setex(
-            f"email_change:{token}",
-            900,
-            f"{user_id}:{new_email}"
-        )
+        await redis_client.setex(f"email_change:{token}", 900, f"{user_id}:{new_email}")
         return token
 
-    async def confirm_email_change(
-            self,
-            token: str,
-            unit_of_work: UnitOfWork
-    ) -> UserGetPartial:
+    async def confirm_email_change(self, token: str, unit_of_work: UnitOfWork) -> UserGetPartial:
         data = await redis_client.get(f"email_change:{token}")
         if not data:
             raise HTTPException(status_code=400, detail="Invalid or expired token")
@@ -138,7 +127,6 @@ class UserService:
         await redis_client.delete(f"email_change:{token}")
 
         return updated_user
-
 
     async def delete(self, user_id: str, unit_of_work: UnitOfWork):
         async with unit_of_work:

@@ -25,6 +25,27 @@ logger = logging.getLogger(__name__)
 
 
 class EmailService:
+    async def send_password_reset_email(self, email: str, token: str):
+        reset_link = f"{settings.FRONTEND_URL}/reset-password?token={token}"
+
+        message = MessageSchema(
+            subject="Reset your password",
+            recipients=[email],
+            body=f"""
+            <h2>Reset Your Password</h2>
+            <p>You requested a password reset. Click the button below to set a new password:</p>
+            <a href="{reset_link}" 
+               style="display:inline-block; padding:10px 20px; background:#007bff; color:white; text-decoration:none; border-radius:5px;">
+                Reset Password
+            </a>
+            <p>This link expires in 15 minutes.</p>
+            <p>If you didn't request this, please ignore this email.</p>
+            """,
+            subtype="html",
+        )
+        fm = FastMail(fast_mail_config)
+        await fm.send_message(message)
+
     async def send_verification_email_with_token(self, email: str, token: str):
         verification_link = f"{settings.FRONTEND_URL}/verify-email?token={token}"
         message = MessageSchema(
@@ -38,11 +59,10 @@ class EmailService:
             </a>
             <p>This link expires in 15 minutes.</p>
             """,
-            subtype="html"
+            subtype="html",
         )
         fm = FastMail(fast_mail_config)
         await fm.send_message(message)
-
 
     async def send_email_change_verification(self, new_email: str, token: str):
         verification_link = f"{settings.FRONTEND_URL}/verify-email-change?token={token}"
@@ -65,14 +85,13 @@ class EmailService:
                 </p>
             </div>
             """,
-            subtype="html"
+            subtype="html",
         )
         fm = FastMail(fast_mail_config)
         await fm.send_message(message)
 
-
     async def send_booking_confirmation_email(self, email: str, booking_data: EmailIn):
-        os.environ['SSL_CERT_FILE'] = certifi.where()
+        os.environ["SSL_CERT_FILE"] = certifi.where()
         if not email:
             logger.warning("No email provided for booking confirmation")
             return
@@ -104,10 +123,7 @@ class EmailService:
 
         try:
             message = MessageSchema(
-                subject="✅ Your booking is confirmed",
-                recipients=[email],
-                body=html_body,
-                subtype="html"
+                subject="✅ Your booking is confirmed", recipients=[email], body=html_body, subtype="html"
             )
 
             fm = FastMail(fast_mail_config)

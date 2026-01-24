@@ -9,4 +9,3 @@ class FastMailConfig(BaseConfig):
     MAIL_PORT: str
     MAIL_STARTTLS: str
     MAIL_SSL_TLS: str
-

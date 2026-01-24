@@ -4,7 +4,11 @@ import logging
 import stripe
 from fastapi import APIRouter, Request, HTTPException
 
-from app.api.dependencies import payment_service as payment_service_dep, UnitOfWorkDep, email_service as email_service_dep
+from app.api.dependencies import (
+    payment_service as payment_service_dep,
+    UnitOfWorkDep,
+    email_service as email_service_dep,
+)
 from app.core import settings
 from app.core.exc.payment import PaymentVerificationFailed
 from app.enums.booking_status import BookingStatus
@@ -38,7 +42,9 @@ async def stripe_webhook(
         session_id = session["id"]
 
         try:
-            result = await payment_service.handle_successful_payment_and_create_booking(unit_of_work, session_id, email_service)
+            result = await payment_service.handle_successful_payment_and_create_booking(
+                unit_of_work, session_id, email_service
+            )
             logger.info(f"✅ Booking created via webhook: {result}")
             return result
 

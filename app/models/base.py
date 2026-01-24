@@ -20,6 +20,7 @@ class CreatedAtModel:
         index=True,
     )
 
+
 class UpdatedAtModel:
     updated_at: Mapped[datetime] = mapped_column(default=func.now(), onupdate=func.now())
 

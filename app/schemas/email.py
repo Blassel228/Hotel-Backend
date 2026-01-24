@@ -9,3 +9,7 @@ class EmailIn(BaseModel):
     start_date: datetime
     end_date: datetime
     price: float
+
+class ChangeEmailRequest(BaseModel):
+    new_email: str
+    password: str

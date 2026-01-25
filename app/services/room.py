@@ -18,11 +18,7 @@ class RoomService:
         async with unit_of_work:
             return await unit_of_work.room.get_multi(offset=offset, limit=limit)
 
-    async def create(self, request: Request, unit_of_work: UnitOfWork, room: RoomCreateIn, image: bytes):
-        print("=" * 50)
-        print("HEADERS:", dict(request.headers))
-        print("CONTENT-TYPE:", request.headers.get("content-type"))
-        print("CONTENT-LENGTH:", request.headers.get("content-length"))
+    async def create(self, unit_of_work: UnitOfWork, room: RoomCreateIn, image: bytes):
         image = base64.b64encode(image).decode("utf-8")
         room = RoomCreate(**room.model_dump(), image=image)
         async with unit_of_work:

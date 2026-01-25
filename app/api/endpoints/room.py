@@ -2,7 +2,8 @@ import json
 from datetime import date
 from typing import List
 
-from fastapi import APIRouter, Form, File, UploadFile, Depends
+from fastapi import APIRouter, Form, File, UploadFile, Depends, HTTPException
+from starlette import status
 from starlette.requests import Request
 
 from app.api.dependencies import room_service, UnitOfWorkDep, get_current_user
@@ -13,13 +14,48 @@ router = APIRouter()
 
 @router.post("/", summary="Create a new room")
 async def create(
-    request:Request, unit_of_work: UnitOfWorkDep, service: room_service, room: str = Form(...), image: UploadFile = File(..., max_size=16 * 1024 * 1024)
+        request: Request,
+        unit_of_work: UnitOfWorkDep,
+        service: room_service,
 ):
-    image = await image.read()
-    room_dict = json.loads(room)
-    room = RoomCreateIn(**room_dict)
-    return await service.create(unit_of_work=unit_of_work, room=room, image=image, request=request)
+    try:
+        form = await request.form(
+            max_files=10,
+            max_fields=100,
+            max_part_size=10 * 1024 * 1024,
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+            detail="File too large or invalid form data"
+        ) from e
 
+    image_file = form.get("image")
+    room_data = form.get("room")
+
+    if not image_file or not room_data:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Missing 'image' or 'room' field"
+        )
+
+
+    image_bytes = await image_file.read()
+
+    try:
+        room_dict = json.loads(room_data)
+        room = RoomCreateIn(**room_dict)
+    except (ValueError, TypeError) as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Invalid room data: {str(e)}"
+        )
+
+    return await service.create(
+        unit_of_work=unit_of_work,
+        room=room,
+        image=image_bytes,
+    )
 
 @router.get("/", response_model=List[RoomRead], summary="Get all rooms")
 async def get_all(unit_of_work: UnitOfWorkDep, service: room_service):

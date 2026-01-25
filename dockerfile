@@ -1,30 +1,22 @@
-FROM python:3.13-slim as builder
+FROM python:3.13-slim AS builder
 
-# Install uv
-RUN pip install uv==0.1.25
-
-ENV UV_CACHE_DIR=/tmp/uv_cache
-
-WORKDIR /core
-
+RUN pip install "uv==0.1.25"
+WORKDIR /app
 COPY pyproject.toml uv.lock ./
+RUN uv pip compile pyproject.toml --output-file=requirements.txt
 
-RUN uv pip compile pyproject.toml -o requirements.txt && \
-    uv venv /core/.venv && \
-    . /core/.venv/bin/activate && \
-    uv pip install --cache-dir=${UV_CACHE_DIR} -r requirements.txt
+FROM python:3.13-slim AS runtime
 
-FROM python:3.13-slim as runtime
-
-ENV VIRTUAL_ENV=/core/.venv \
-    PATH="/core/.venv/bin:$PATH"
-
-COPY --from=builder ${VIRTUAL_ENV} ${VIRTUAL_ENV}
+RUN pip install "uv==0.1.25"
 
 WORKDIR /app
-
 COPY . .
+
+RUN uv pip install --system -r requirements.txt
+
+RUN pip uninstall -y uv && rm -rf /root/.cache/uv
 
 RUN chmod +x ./app-start.sh
 
+EXPOSE 8000
 CMD ["./app-start.sh"]

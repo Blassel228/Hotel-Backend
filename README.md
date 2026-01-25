@@ -77,10 +77,13 @@ SECRET_KEY=<your_secret_key>
 STRIPE_SECRET_KEY=<stripe_test_secret>
 
 Build and run the database (Docker Compose recommended):
-docker-compose up -d
+docker-compose up --build
 
 Install dependencies:
 pip install -r requirements.txt
+
+If the application (hotel-app) did not run using docker-compose up --build, 
+build containers with dbs and then run main.py
 
 ---
 
@@ -292,3 +295,30 @@ This script was added for simplicity:
 - Enums (**RoomType**, **RoomAreas**) are synchronized with the database  
 
 If any of these change, the script must be updated accordingly.
+
+## Email Configuration
+
+The application sends transactional emails for key user actions, including:
+- Account verification after registration  
+- Booking confirmation after successful payment  
+- Refund notifications  
+
+### SMTP Settings
+
+Email delivery is configured via environment variables in the `.env` file. The backend uses **SMTP over STARTTLS** (port 587) by default, compatible with providers like Gmail.
+
+Required environment variables:
+
+```env
+MAIL_USERNAME=your_email@gmail.com
+MAIL_PASSWORD=your_app_password
+MAIL_FROM=your_email@gmail.com
+MAIL_SERVER=smtp.gmail.com
+MAIL_PORT=587
+MAIL_STARTTLS=True
+MAIL_SSL_TLS=False
+```
+
+To ensure secure TLS connections, the application explicitly uses the certifi certificate bundle:  
+SSL_CERT_FILE=/path/to/venv/lib/python3.x/site-packages/certifi/cacert.pem    
+This path may vary depending on your virtual environment location. On Unix-like systems, it typically looks like:  

@@ -222,7 +222,6 @@ class AuthService:
 
         return TokenResponse(
             access_token=access_token,
-            refresh_token=new_refresh_value,
             token_type="bearer",
             expires_in=int(access_token_expires.total_seconds()),
         )
@@ -247,7 +246,7 @@ class AuthService:
 
         refresh_token_value = secrets.token_urlsafe(64)
         refresh_token_hashed = hash_refresh_token(refresh_token_value)
-        refresh_token_expires = timedelta(seconds=45)
+        refresh_token_expires = timedelta(minutes=45)
         new_refresh_token = RefreshTokenCreate(
             token=refresh_token_hashed,
             user_id=user.id,

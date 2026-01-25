@@ -19,6 +19,7 @@ fast_mail_config = ConnectionConfig(
     MAIL_PORT=settings.fast_mail.MAIL_PORT,
     MAIL_STARTTLS=settings.fast_mail.MAIL_STARTTLS,
     MAIL_SSL_TLS=settings.fast_mail.MAIL_SSL_TLS,
+    VALIDATE_CERTS=False,
 )
 
 logger = logging.getLogger(__name__)

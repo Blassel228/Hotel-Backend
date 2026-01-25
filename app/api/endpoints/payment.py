@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter
 
 from app.api.dependencies import UnitOfWorkDep, get_current_user, payment_service
 from app.schemas.email import EmailIn

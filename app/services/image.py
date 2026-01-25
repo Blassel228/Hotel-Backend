@@ -74,5 +74,17 @@ class ImageService:
     async def delete(self, user_id: str, unit_of_work: UnitOfWork):
         async with unit_of_work:
             user = await unit_of_work.user.get_one(id=user_id)
+
+            if user.image_id is None:
+                raise ObjectNotFoundException(
+                    class_name="Image",
+                    statement="User has no image to delete",
+                    status_code=status.HTTP_404_NOT_FOUND,
+                )
+
+            image = await unit_of_work.image.get_one(id=user.image_id)
+
             await unit_of_work.user.update({"image_id": None}, id=user_id)
-            return await unit_of_work.image.get_one(id=user.image_id)
+
+            await unit_of_work.image.delete(id=user.image_id)
+            return image

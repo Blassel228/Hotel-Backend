@@ -19,6 +19,20 @@ async def update(
     return await service.update(unit_of_work=unit_of_work, user_id=current_user.id, file=file)
 
 
+@router.put("/admin-update")
+async def update(
+    service: image_service, unit_of_work: UnitOfWorkDep, user_id: str, file: UploadFile = File(...)
+):
+    return await service.update(unit_of_work=unit_of_work, user_id=user_id, file=file)
+
+
+@router.post("/admin-create")
+async def create(
+    service: image_service, user_id: str, unit_of_work: UnitOfWorkDep, file: UploadFile = File(...)
+):
+    return await service.create(unit_of_work=unit_of_work, user_id=user_id, file=file)
+
+
 @router.get("/")
 async def update(service: image_service, unit_of_work: UnitOfWorkDep, current_user: get_current_user):
     return await service.get_one(unit_of_work=unit_of_work, user_id=current_user.id)

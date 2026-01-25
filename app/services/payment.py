@@ -171,7 +171,7 @@ class PaymentService:
                         "user_id": booking.user_id,
                     }
                 )
-                await unit_of_work.booking.update({"status": BookingStatus.REFUNDED.value}, id=booking.id)
+                await unit_of_work.booking.update({"status": BookingStatus.CANCELLED.value}, id=booking.id)
 
         except stripe.StripeError as e:
             logger.error(f"Stripe refund failed for booking {request.booking_id}: {str(e)}")

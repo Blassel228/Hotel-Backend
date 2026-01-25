@@ -40,6 +40,7 @@ class RoomRepository(SQLAlchemyRepository):
             and_(
                 Booking.room_id == Room.id,
                 Booking.status != BookingStatus.CANCELLED.value,
+                Booking.status != BookingStatus.REFUNDED.value,
                 Booking.start_date <= end_date,
                 Booking.end_date >= start_date,
             )

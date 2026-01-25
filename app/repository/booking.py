@@ -1,5 +1,6 @@
 from sqlalchemy import Sequence, exists, select
 
+from app.enums.booking_status import BookingStatus
 from app.models import Booking, Review
 from app.repository.base import SQLAlchemyRepository
 
@@ -15,7 +16,7 @@ class BookingRepository(SQLAlchemyRepository):
         """
         rating_exists = exists().where(Review.booking_id == Booking.id)
 
-        statement = select(Booking).where(Booking.user_id == user_id, ~rating_exists).distinct()
+        statement = select(Booking).where(Booking.user_id == user_id, ~rating_exists, Booking.status==BookingStatus.CONFIRMED.value).distinct()
 
         statement = self.add_loading_options(statement)
         return await self.execute(statement=statement, action=lambda result: result.unique().scalars().all())

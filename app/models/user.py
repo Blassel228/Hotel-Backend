@@ -20,9 +20,9 @@ class User(Base, CreatedAtModel, UUIDModel):
     sex = Column(Integer, SQLEnum(UserSex, name="user_sex"), default=UserSex.NOT_KNOWN.value, nullable=False)
     is_admin = Column(Boolean, default=False, nullable=False)
     birthdate = Column(DateTime, nullable=True)
-    image_id = Column(UUID, ForeignKey("image.id", ondelete="CASCADE"), nullable=True)
+    image_id = Column(UUID, ForeignKey("image.id"), nullable=True)
 
-    image = relationship("Image", back_populates="user", uselist=False, cascade="delete")
+    image = relationship("Image", back_populates="user", uselist=False)
     bookings = relationship("Booking", back_populates="user", cascade="all, delete-orphan")
     reviews = relationship("Review", back_populates="user", cascade="all, delete-orphan")
     refresh_tokens = relationship("RefreshToken", cascade="all, delete-orphan")

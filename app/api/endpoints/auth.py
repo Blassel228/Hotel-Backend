@@ -36,11 +36,7 @@ async def reset_password(
     auth_service: auth_service_dep,
     unit_of_work: UnitOfWorkDep,
 ):
-    return await auth_service.reset_password(
-        request.token,
-        request.new_password,
-        unit_of_work
-    )
+    return await auth_service.reset_password(request.token, request.new_password, unit_of_work)
 
 
 @router.get("/verify-and-create")

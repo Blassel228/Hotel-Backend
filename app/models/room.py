@@ -7,7 +7,7 @@ from .base import Base, CreatedAtModel, UUIDModel
 class Room(Base, CreatedAtModel, UUIDModel):
     __tablename__ = "room"
 
-    image = Column(LargeBinary(length=2**24), nullable=False)
+    image = Column(LargeBinary, nullable=False)
     type = Column(String, nullable=False)
     price = Column(Integer, nullable=False)
     beds = Column(Integer, nullable=False)

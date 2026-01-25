@@ -2,6 +2,8 @@ import base64
 from datetime import datetime
 from typing import Sequence
 
+from starlette.requests import Request
+
 from app.models import Room
 from app.schemas.room import RoomFilterParams, RoomUpdate, RoomCreate, RoomCreateIn, RoomUpdateIn
 from app.utils.unitofwork import UnitOfWork
@@ -16,7 +18,11 @@ class RoomService:
         async with unit_of_work:
             return await unit_of_work.room.get_multi(offset=offset, limit=limit)
 
-    async def create(self, unit_of_work: UnitOfWork, room: RoomCreateIn, image: bytes):
+    async def create(self, request: Request, unit_of_work: UnitOfWork, room: RoomCreateIn, image: bytes):
+        print("=" * 50)
+        print("HEADERS:", dict(request.headers))
+        print("CONTENT-TYPE:", request.headers.get("content-type"))
+        print("CONTENT-LENGTH:", request.headers.get("content-length"))
         image = base64.b64encode(image).decode("utf-8")
         room = RoomCreate(**room.model_dump(), image=image)
         async with unit_of_work:

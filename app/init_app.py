@@ -1,11 +1,16 @@
 import logging
 
+import starlette.formparsers
+import starlette.datastructures
+
+starlette.formparsers.MultiPartParser.max_file_size = 100 * 1024 * 1024
+
 from fastapi import FastAPI, HTTPException
 from fastapi import status
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from requests import Request
+from starlette.requests import Request
 
 from app.api.endpoints import api_router
 from app.core import settings
@@ -18,6 +23,7 @@ app = FastAPI(
     title=settings.PROJECT_NAME,
     debug=settings.DEBUG,
 )
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.origins,

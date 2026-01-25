@@ -61,7 +61,6 @@ class AuthService:
         await redis_client.delete(f"pwd_reset:{token}")
         return {"message": "Password updated successfully"}
 
-
     async def forgot_password(
         self,
         email: str,

@@ -3,6 +3,7 @@ from datetime import date
 from typing import List
 
 from fastapi import APIRouter, Form, File, UploadFile, Depends
+from starlette.requests import Request
 
 from app.api.dependencies import room_service, UnitOfWorkDep, get_current_user
 from app.schemas.room import RoomFilterParams, RoomCreateIn, RoomUpdateIn, RoomRead
@@ -12,12 +13,12 @@ router = APIRouter()
 
 @router.post("/", summary="Create a new room")
 async def create(
-    unit_of_work: UnitOfWorkDep, service: room_service, room: str = Form(...), image: UploadFile = File(...)
+    request:Request, unit_of_work: UnitOfWorkDep, service: room_service, room: str = Form(...), image: UploadFile = File(..., max_size=16 * 1024 * 1024)
 ):
+    image = await image.read()
     room_dict = json.loads(room)
     room = RoomCreateIn(**room_dict)
-    image = await image.read()
-    return await service.create(unit_of_work=unit_of_work, room=room, image=image)
+    return await service.create(unit_of_work=unit_of_work, room=room, image=image, request=request)
 
 
 @router.get("/", response_model=List[RoomRead], summary="Get all rooms")

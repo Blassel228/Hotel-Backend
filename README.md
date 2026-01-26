@@ -142,7 +142,7 @@ stripe login
 This command opens a browser window to authenticate your Stripe account.
 
 3. **Start the Webhook Listener**
-stripe listen --forward-to localhost:8000/stripe-webhook
+stripe listen --forward-to localhost:8000/api/stripe-webhook
 
 ✔ This command:  
 - Listens for Stripe events in test mode  

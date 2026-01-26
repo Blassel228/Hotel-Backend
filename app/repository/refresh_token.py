@@ -1,5 +1,4 @@
 from datetime import datetime
-from uuid import UUID
 
 from sqlalchemy import delete, update
 
@@ -14,10 +13,24 @@ class RefreshTokenRepository(SQLAlchemyRepository):
         stmt = delete(RefreshToken).where(RefreshToken.expires_at < cutoff)
         await self.execute(stmt)
 
-    async def revoke_all_for_user(self, user_id: UUID) -> None:
-        stmt = (
+
+    async def revoke_all_for_user_except(self, user_id: str, exclude_token_id: int):
+        query = (
             update(RefreshToken)
-            .where(RefreshToken.user_id == user_id, RefreshToken.revoked == False, RefreshToken.used == False)
+            .where(
+                RefreshToken.user_id == user_id,
+                RefreshToken.id != exclude_token_id,
+                RefreshToken.revoked.is_(False)
+            )
             .values(revoked=True, used=True)
         )
-        await self.execute(stmt)
+        await self.session.execute(query)
+
+
+    async def revoke_all_for_user(self, user_id: str):
+        query = (
+            update(RefreshToken)
+            .where(RefreshToken.user_id == user_id)
+            .values(revoked=True, used=True)
+        )
+        await self.session.execute(query)

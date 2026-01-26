@@ -169,7 +169,7 @@ class AuthService:
         return user
 
     async def rotate_refresh_token(
-        self, unit_of_work: UnitOfWork, refresh_token_str: str, response: Response
+            self, unit_of_work: UnitOfWork, refresh_token_str: str, response: Response
     ) -> TokenResponse:
         hashed_token = hash_refresh_token(refresh_token_str)
 
@@ -184,13 +184,19 @@ class AuthService:
         now = datetime.now(timezone.utc)
         expires_at = ensure_utc_aware(token_record.expires_at)
 
-        print(f"Now: {now}")
-        print(f"Token expires at: {expires_at}")
-
         if expires_at < now:
+            async with unit_of_work:
+                await unit_of_work.refresh_token.delete(id=token_record.id)
             raise AuthError(error_code="REFRESH_TOKEN_EXPIRED", detail="Refresh token has expired")
 
+        user_id = token_record.user_id
+
         async with unit_of_work:
+            await unit_of_work.refresh_token.revoke_all_for_user_except(
+                user_id=user_id,
+                exclude_token_id=token_record.id
+            )
+
             await unit_of_work.refresh_token.update({"used": True, "revoked": True}, id=token_record.id)
 
             new_refresh_value = secrets.token_urlsafe(64)
@@ -198,7 +204,7 @@ class AuthService:
             new_refresh_expires = timedelta(minutes=45)
             new_refresh_token = RefreshTokenCreate(
                 token=new_refresh_hashed,
-                user_id=token_record.user_id,
+                user_id=user_id,
                 expires_at=datetime.now(timezone.utc) + new_refresh_expires,
                 revoked=False,
                 used=False,
@@ -207,7 +213,7 @@ class AuthService:
 
             access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
             access_token = self.create_access_token(
-                data={"sub": str(token_record.user_id)},
+                data={"sub": str(user_id)},
                 expires_delta=access_token_expires,
             )
 
@@ -237,6 +243,9 @@ class AuthService:
                 detail="Incorrect username or password",
                 headers={"WWW-Authenticate": "Bearer"},
             )
+
+        async with unit_of_work:
+            await unit_of_work.refresh_token.revoke_all_for_user(user.id)
 
         access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
         access_token = self.create_access_token(
